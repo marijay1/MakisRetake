@@ -24,7 +24,6 @@ public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
     private Bombsite theCurrentBombsite = Bombsite.A;
     private CCSPlayerController? thePlanter;
 
-    //TODO make Config file or make config file
     public MakisConfig Config { get; set; } = null!;
     private readonly PlayerManager thePlayerManager;
     private GameManager theGameManager;
@@ -35,13 +34,10 @@ public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
         thePlayerManager = new PlayerManager();
         theGameManager = new GameManager();
         theQueueManager = new QueueManager(theGameManager, Config);
-        //Test which one fires first
-        Console.WriteLine("Constructor loaded");
     }
 
     public void OnConfigParsed(MakisConfig aMakiConfig) {
         Config = aMakiConfig;
-        Console.WriteLine("Config Parsed");
     }
 
     public override void Load(bool aHotReload) {

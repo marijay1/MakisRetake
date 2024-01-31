@@ -18,7 +18,7 @@ public class MapConfig {
 
     public MapConfig(String aModuleDirectory, String aMapName) {
         theMapName = aMapName;
-        theMapSpawnDirectory = Path.Combine(aModuleDirectory, aMapName);
+        theMapSpawnDirectory = Path.Combine(Path.GetDirectoryName(aModuleDirectory), @"..\configs\plugins\MakisRetake\MapSpawns");
         theMapSpawnPath = Path.Combine(theMapSpawnDirectory, $"{theMapName}.json");
         theMapSpawns = new HashSet<MapSpawn>();
     }
@@ -37,21 +37,22 @@ public class MapConfig {
 
     public void load() {
         try {
-            if (!File.Exists(theMapSpawnPath)) {
-                throw new FileNotFoundException();
+            if (File.Exists(theMapSpawnPath)) {
+                string myJsonData = File.ReadAllText(theMapSpawnPath);
+                JsonSerializerOptions myOptions = new JsonSerializerOptions();
+                myOptions.Converters.Add(new VectorProvider());
+                myOptions.Converters.Add(new QAngleProvider());
+
+                theMapSpawns = JsonSerializer.Deserialize<HashSet<MapSpawn>>(myJsonData, myOptions);
+
+                if (theMapSpawns == null || theMapSpawns.Count < 0) {
+                    throw new Exception("No Spawns found in config");
+                }
+            } else {
+
+                theMapSpawns = new HashSet<MapSpawn>();
+                save();
             }
-
-            string myJsonData = File.ReadAllText(theMapSpawnPath);
-            JsonSerializerOptions myOptions = new JsonSerializerOptions();
-            myOptions.Converters.Add(new VectorProvider());
-            myOptions.Converters.Add(new QAngleProvider());
-
-            theMapSpawns = JsonSerializer.Deserialize<HashSet<MapSpawn>>(myJsonData, myOptions);
-
-            if (theMapSpawns == null || theMapSpawns.Count < 0) {
-                throw new Exception("No Spawns found in config");
-            }
-
         } catch (Exception) {
             throw new Exception();
         }
