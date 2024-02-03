@@ -17,7 +17,7 @@ public partial class MakisRetake {
             //Player is null
             return;
         }
-        if (!aPlayer.PlayerPawn.IsValid) {
+        if (!thePlayerManager.isPlayerPawnValid(aPlayer)) {
             //player pawn is not valid
             return;
         }
@@ -71,7 +71,7 @@ public partial class MakisRetake {
             //Player is null
             return;
         }
-        if (!aPlayer.PlayerPawn.IsValid) {
+        if (!thePlayerManager.isPlayerPawnValid(aPlayer)) {
             //player pawn is not valid
             return;
         }

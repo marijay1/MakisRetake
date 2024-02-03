@@ -2,12 +2,16 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using MakisRetake.Enums;
+using System.Reflection.Metadata.Ecma335;
 
 namespace MakisRetake.Managers;
 
 public class GameManager {
 
-    private Dictionary<int, int> thePlayerPoints = new Dictionary<int, int>();
+    PlayerManager thePlayerManager;
+    QueueManager theQueueManager;
+
+    private Dictionary<CCSPlayerController, int> thePlayerPoints = new Dictionary<CCSPlayerController, int>();
     private int theCurrentConsecutiveWins = 0;
     private CsTeam theLastWinningTeam = CsTeam.None;
     private readonly int theConsecutiveWinsToScramble = 5;
@@ -20,72 +24,108 @@ public class GameManager {
     public const int ScoreForMvp = 35;
 
 
-    public GameManager() {
-
+    public GameManager(PlayerManager aPlayerManager, QueueManager aQueueManager) {
+        thePlayerManager = aPlayerManager;
+        theQueueManager = aQueueManager;
     }
 
-    public void ResetPlayerScores()
-    {
-        thePlayerPoints = new Dictionary<int, int>();
+
+
+    public void ResetPlayerScores() {
+        thePlayerPoints = new Dictionary<CCSPlayerController, int>();
     }
 
-    public void AddScore(CCSPlayerController aPlayer, int aScore)
-    {
-        if (!aPlayer.IsValid || aPlayer.UserId == null)
-        {
+    public void AddScore(CCSPlayerController aPlayer, int aScore) {
+        if (!thePlayerManager.isPlayerValid(aPlayer)) {
             return;
         }
 
-        var myPlayerId = (int)aPlayer.UserId;
-
-        if (!thePlayerPoints.TryAdd(myPlayerId, aScore))
-        {
-            // Add to the player's existing score
-            thePlayerPoints[myPlayerId] += aScore;
+        if (!thePlayerPoints.TryAdd(aPlayer, aScore)) {
+            thePlayerPoints[aPlayer] += aScore;
         }
     }
 
 
     public void handleRoundWin(CsTeam aWinningTeam) {
         theCurrentConsecutiveWins++;
+        if (theLastWinningTeam != CsTeam.None) {
+            return;
+        }
+
+        if (aWinningTeam != theLastWinningTeam) {
+            if (theCurrentConsecutiveWins >= theWinsToBreakStreak) {
+                Server.PrintToChatAll($"The {aWinningTeam} have broken the {theLastWinningTeam}'s winstreak of {theCurrentConsecutiveWins}!");
+            }
+            theCurrentConsecutiveWins = 0;
+        }
 
         if (aWinningTeam == CsTeam.Terrorist) {
-            if (theCurrentConsecutiveWins >=  theWinsToBreakStreak) {
-                Server.PrintToChatAll(String.Format("The Terrorist have won {0} rounds in a row! Teams are being scrambled.", theCurrentConsecutiveWins));
+            if (theCurrentConsecutiveWins >= theConsecutiveWinsToScramble) {
+                Server.PrintToChatAll($"The Terrorist have won {theCurrentConsecutiveWins} rounds in a row! Teams are being scrambled.");
                 scrambleTeams();
                 theCurrentConsecutiveWins = 0;
-            }
-
-            if (theCurrentConsecutiveWins > (theConsecutiveWinsToScramble * theWinRatioToWarn)) {
-                Server.PrintToChatAll(String.Format("The Terrorist have won {0} rounds in a row! {1} more rounds until scramble.", theCurrentConsecutiveWins, theConsecutiveWinsToScramble - theCurrentConsecutiveWins));
+            } else if (theCurrentConsecutiveWins > (theConsecutiveWinsToScramble * theWinRatioToWarn)) {
+                Server.PrintToChatAll($"The Terrorist have won {theCurrentConsecutiveWins} rounds in a row! {theConsecutiveWinsToScramble - theCurrentConsecutiveWins} more rounds until scramble.");
             }
         } 
 
         if (aWinningTeam == CsTeam.CounterTerrorist) {
-            //TODO
-        }
-
-        if (theLastWinningTeam != CsTeam.None && aWinningTeam != theLastWinningTeam && theCurrentConsecutiveWins >= theWinsToBreakStreak) {
-            Server.PrintToChatAll(String.Format("The {0} have broken the {1}'s winstreak of {3}!"));
-            theCurrentConsecutiveWins = 0;
+            balanceTeams();
         }
     }
 
     private void scrambleTeams() {
-        // TODO
-        // var shuffledActivePlayers = Helpers.Shuffle(QueueManager.ActivePlayers);
+        List<CCSPlayerController> myActivePlayers = theQueueManager.getActivePlayers();
 
-        // var newTerrorists = shuffledActivePlayers.Take(QueueManager.GetTargetNumTerrorists()).ToList();
-        // var newCounterTerrorists = shuffledActivePlayers.Except(newTerrorists).ToList();
+        Random random = new Random();
+        for (int i = myActivePlayers.Count - 1; i > 0; i--) {
+            int j = random.Next(i + 1);
+            CCSPlayerController myTempPlayer = myActivePlayers[i];
+            myActivePlayers[i] = myActivePlayers[j];
+            myActivePlayers[j] = myTempPlayer;
+        }
 
-        // SetTeams(newTerrorists, newCounterTerrorists);
+        List<CCSPlayerController> myNewTerrorists = myActivePlayers.Take(theQueueManager.getTargetTerroristNum()).ToList();
+        List<CCSPlayerController> myNewCounterTerrorists = myActivePlayers.Except(myNewTerrorists).ToList();
+
+        setTeams(myNewTerrorists, myNewCounterTerrorists);
+    }
+
+    private void balanceTeams() {
+        theQueueManager.updateQueue();
+        List<CCSPlayerController> myOldTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.Terrorist).ToList();
+        List<CCSPlayerController> myOldCounterTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.CounterTerrorist).ToList();
+
+        List<CCSPlayerController> myNewTerrorists = new();
+        List<CCSPlayerController> myNewCounterTerrorists = new();
+
+        //Allocate new Terrorists
+        CCSPlayerController myBestTerrorist = myOldTerrorists.MaxBy(p => thePlayerPoints[p])!;
+        myNewTerrorists.Add(myBestTerrorist);
+        myOldTerrorists.Remove(myBestTerrorist);
+        while (!theQueueManager.getTargetTerroristNum().Equals(myNewTerrorists.Count)) {
+            CCSPlayerController myBestCounterTerrorist = myOldCounterTerrorists.MaxBy(aPlayer => thePlayerPoints[aPlayer])!;
+            myNewTerrorists.Add(myBestCounterTerrorist);
+            myOldCounterTerrorists.Remove(myBestCounterTerrorist);
+        }
+
+        //Allocate new Counter Terrorists
+        myOldCounterTerrorists.ForEach(aPlayer => myNewCounterTerrorists.Add(aPlayer));
+        myOldTerrorists.ForEach(aPlayer => myNewCounterTerrorists.Add(aPlayer));
+
+        setTeams(myNewTerrorists, myNewCounterTerrorists);
+    }
+
+    private void setTeams(List<CCSPlayerController> aTerrorists, List<CCSPlayerController> aCounterTerrorists) {
+        aTerrorists.Where(aPlayer => thePlayerManager.isPlayerValid(aPlayer)).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.Terrorist));
+        aCounterTerrorists.Where(aPlayer => thePlayerManager.isPlayerValid(aPlayer)).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.CounterTerrorist));
     }
 
     public void autoPlantBomb(CCSPlayerController aPlayer, Bombsite aBombsite) {
         var myPlayerPawn = aPlayer.PlayerPawn;
         var myPlantedBomb = Utilities.CreateEntityByName<CPlantedC4>("planted_c4");
 
-        if (!myPlayerPawn.IsValid || !aPlayer.IsValid || aPlayer.AbsOrigin == null
+        if (!thePlayerManager.isPlayerPawnValid(aPlayer) || !thePlayerManager.isPlayerValid(aPlayer) || aPlayer.AbsOrigin == null
             || myPlantedBomb == null || myPlantedBomb.AbsOrigin == null) {
             //restart round?
             return;
@@ -104,7 +144,7 @@ public class GameManager {
 
         myPlantedBomb.DispatchSpawn();
 
-        var gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!;
+        CCSGameRules gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!;
         gameRules.BombPlanted = true;
         gameRules.BombDefused = false;
 

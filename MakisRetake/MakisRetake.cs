@@ -32,8 +32,8 @@ public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
 
     public MakisRetake() {
         thePlayerManager = new PlayerManager();
-        theGameManager = new GameManager();
-        theQueueManager = new QueueManager(theGameManager, Config);
+        theQueueManager = new QueueManager();
+        theGameManager = new GameManager(theQueueManager);
     }
 
     public void OnConfigParsed(MakisConfig aMakiConfig) {

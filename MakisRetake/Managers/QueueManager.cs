@@ -8,18 +8,16 @@ namespace MakisRetake.Managers;
 
 public class QueueManager {
 
-    private readonly GameManager theGameManager;
-    private readonly MakisConfig theMakiConfig;
+    private PlayerManager thePlayerManager;
 
     private readonly int theMaxActivePlayers = 9;
     private readonly float theTerroristRatio = 0.45f;
 
     private List<CCSPlayerController> theQueuePlayers = new();
-    private HashSet<CCSPlayerController> theActivePlayers = new();
+    private List<CCSPlayerController> theActivePlayers = new();
 
-    public QueueManager(GameManager aGameManager, MakisConfig aMakiConfig) {
-        theGameManager = aGameManager;
-        theMakiConfig = aMakiConfig;
+    public QueueManager(PlayerManager aPlayerManager) {
+        thePlayerManager = aPlayerManager;
     }
 
     public int getTargetTerroristNum() {
@@ -32,50 +30,17 @@ public class QueueManager {
         return theActivePlayers.Count - getTargetCounterTerroristNum();
     }
 
-    public void addPlayerToActive(CCSPlayerController aPlayer) {
-        theActivePlayers.Add(aPlayer);
-    }
-
-    public void addPlayerToQueue(CCSPlayerController aPlayer) {
-        theQueuePlayers.Add(aPlayer);
-    }
-
-    public void removePlayerFromActive(CCSPlayerController aPlayer) {
-        theActivePlayers.Remove(aPlayer);
-    }
-
-    public void removePlayerFromQueue(CCSPlayerController aPlayer) {
-        theQueuePlayers.Remove(aPlayer);
-    }
-
-    public HashSet<CCSPlayerController> getActivePlayers() {
+    public List<CCSPlayerController> getActivePlayers() {
         return theActivePlayers;
     }
 
-    public void movePlayerToSpectator(CCSPlayerController aPlayer) {
+    public void removePlayerFromQueues(CCSPlayerController aPlayer) {
         theActivePlayers.Remove(aPlayer);
         theQueuePlayers.Remove(aPlayer);
     }
 
     public bool isPlayerActive(CCSPlayerController aPlayer) {
         return theActivePlayers.Contains(aPlayer);
-    }
-
-    public bool isPlayerQueued(CCSPlayerController aPlayer) {
-        return theQueuePlayers.Contains(aPlayer);
-    }
-
-    public bool isPlayerSpectator(CCSPlayerController aPlayer) {
-        return (!theQueuePlayers.Contains(aPlayer) && !theActivePlayers.Contains(aPlayer));
-    }
-
-    public void balanceTeams() {
-        if (!theMakiConfig.mySwitchTeamsOnWin) {
-            return;
-        }
-        foreach (CCSPlayerController aPlayer in theActivePlayers) {
-            
-        }
     }
 
     public void updateQueue() {
@@ -94,7 +59,7 @@ public class QueueManager {
                 var myPlayersToAdd = theQueuePlayers.Take(myPlayersToAddNum).ToList();
                 foreach (var aPlayer in myPlayersToAdd) {
                     theQueuePlayers.Remove(aPlayer);
-                    if (aPlayer.IsValid) {
+                    if (thePlayerManager.isPlayerValid(aPlayer)) {
                         theActivePlayers.Add(aPlayer);
                         aPlayer.SwitchTeam(CsTeam.CounterTerrorist);
                     }
@@ -129,6 +94,6 @@ public class QueueManager {
             myNonVipActivePlayers.Remove(myRemovedPlayer);
             myRemovedPlayer.PrintToChat("You have been moved to Queue due to a VIP.");
         }
-        addPlayerToActive(aVipPlayer);
+        theActivePlayers.Add(aVipPlayer);
     }
 }
