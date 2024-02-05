@@ -18,6 +18,8 @@ public class MapSpawn {
     public CsTeam theTeam { get; }
     public Bombsite theBombsite { get; }
     public bool theCanBePlanter { get; }
+    [JsonIgnore]
+    public bool theIsInUse { get; set; } = false;
 
     public MapSpawn(Vector aVector, QAngle aQAngle, CsTeam aTeam, Bombsite aBombsite, bool aCanBePlanter) {
         theVector = aVector;

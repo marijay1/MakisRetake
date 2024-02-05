@@ -42,10 +42,23 @@ public partial class MakisRetake {
 		//reset scores of players
 		theGameManager.ResetPlayerScores();
 
+        Random random = new Random();
+        List<CCSPlayerController> activeTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team.Equals(CsTeam.Terrorist)).ToList();
+
+        int randomIndex = random.Next(activeTerrorists.Count);
+        thePlanter = activeTerrorists[randomIndex];
+
         foreach (CCSPlayerController player in theQueueManager.getActivePlayers().Where(aPlayer => thePlayerManager.isPlayerPawnValid(aPlayer))) {
-            //check valid player
-            //remove weapons, armour, and bomb
-            //allocate weapons, grenades, equipment, and bomb
+			if (thePlayerManager.isPlayerValid(player)) {
+				MapSpawn myMapSpawn = theMapConfig!.getRandomNonPlanterSpawn(theCurrentBombsite, player.Team);
+                player.Teleport(myMapSpawn.theVector, myMapSpawn.theQAngle, new Vector(0f, 0f, 0f));
+
+
+
+                //remove weapons, armour, and bomb
+                //allocate weapons, grenades, equipment, and bomb
+            }
+
         }
 
         //announce bombsite
