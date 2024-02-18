@@ -1,8 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Utils;
-using MakisRetake.Configs;
-using System.Collections.Immutable;
 
 namespace MakisRetake.Managers;
 

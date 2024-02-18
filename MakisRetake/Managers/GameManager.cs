@@ -2,7 +2,6 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using MakisRetake.Enums;
-using System.Reflection.Metadata.Ecma335;
 
 namespace MakisRetake.Managers;
 
@@ -67,7 +66,7 @@ public class GameManager {
             } else if (theCurrentConsecutiveWins > (theConsecutiveWinsToScramble * theWinRatioToWarn)) {
                 Server.PrintToChatAll($"The Terrorist have won {theCurrentConsecutiveWins} rounds in a row! {theConsecutiveWinsToScramble - theCurrentConsecutiveWins} more rounds until scramble.");
             }
-        } 
+        }
 
         if (aWinningTeam == CsTeam.CounterTerrorist) {
             balanceTeams();

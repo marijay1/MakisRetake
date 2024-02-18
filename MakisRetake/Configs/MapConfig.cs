@@ -1,18 +1,11 @@
-﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Utils;
+﻿using CounterStrikeSharp.API.Modules.Utils;
 using MakisRetake.Configs.JsonProviders;
 using MakisRetake.Enums;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace MakisRetake.Configs;
-public class MapConfig {
 
+public class MapConfig {
     private readonly string theMapName;
     private readonly string theMapSpawnDirectory;
     private readonly string theMapSpawnPath;
@@ -21,7 +14,8 @@ public class MapConfig {
 
     public MapConfig(String aModuleDirectory, String aMapName) {
         theMapName = aMapName;
-        theMapSpawnDirectory = Path.Combine(Path.GetDirectoryName(aModuleDirectory), @"..\configs\plugins\MakisRetake\MapSpawns");
+
+        theMapSpawnDirectory = Path.Combine(Path.GetDirectoryName(aModuleDirectory), "..", "configs", "plugins", "MakisRetake", "MapSpawns");
         theMapSpawnPath = Path.Combine(theMapSpawnDirectory, $"{theMapName}.json");
         theMapSpawns = new List<MapSpawn>();
     }
@@ -79,7 +73,6 @@ public class MapConfig {
                     throw new Exception("No Spawns found in config");
                 }
             } else {
-
                 theMapSpawns = new List<MapSpawn>();
                 save();
             }
@@ -103,7 +96,6 @@ public class MapConfig {
 
             File.WriteAllText(theMapSpawnPath, myJsonString);
         } catch (IOException) { }
-
     }
 
     public void addSpawn(MapSpawn aSpawn) {
@@ -116,4 +108,3 @@ public class MapConfig {
         save();
     }
 }
-

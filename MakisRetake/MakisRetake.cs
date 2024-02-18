@@ -8,9 +8,8 @@ using MakisRetake.Managers;
 
 namespace MakisRetake;
 
-[MinimumApiVersion(159)]
+[MinimumApiVersion(167)]
 public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
-
     private const string Version = "0.0.1";
 
     public override string ModuleName => "Maki's Retake";

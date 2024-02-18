@@ -21,12 +21,12 @@ public partial class MakisRetake {
             //player pawn is not valid
             return;
         }
-        
+
         if (aCommandInfo.ArgCount != 4) {
             //Invalid number of arguments
             aCommandInfo.ReplyToCommand("!addspawn [T/CT] [A/B] [Y/N (planter spawn)]");
         }
-        
+
         string myTeamString = aCommandInfo.GetArg(1).ToUpper();
         string myBombsiteString = aCommandInfo.GetArg(2).ToUpper();
         string myPlanterSpawnString = aCommandInfo.GetArg(3).ToUpper();
@@ -63,7 +63,7 @@ public partial class MakisRetake {
         theMapConfig.addSpawn(myMapSpawn);
     }
 
-    [ConsoleCommand("css_mrremovespawn", "Removes the spawn closest to you.")]
+    [ConsoleCommand("css_removespawn", "Removes the spawn closest to you.")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     [RequiresPermissions("@css/admin")]
     public void RemoveSpawnCommand(CCSPlayerController? aPlayer, CommandInfo aCommandInfo) {
