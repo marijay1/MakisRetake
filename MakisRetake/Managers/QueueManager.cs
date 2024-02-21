@@ -1,12 +1,11 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Utils;
+using CSPlus.Base.Entities;
 
 namespace MakisRetake.Managers;
 
 public class QueueManager {
-
-    private PlayerManager thePlayerManager;
 
     private readonly int theMaxActivePlayers = 9;
     private readonly float theTerroristRatio = 0.45f;
@@ -14,8 +13,7 @@ public class QueueManager {
     private List<CCSPlayerController> theQueuePlayers = new();
     private List<CCSPlayerController> theActivePlayers = new();
 
-    public QueueManager(PlayerManager aPlayerManager) {
-        thePlayerManager = aPlayerManager;
+    public QueueManager() {
     }
 
     public int getTargetTerroristNum() {
@@ -26,6 +24,10 @@ public class QueueManager {
 
     public int getTargetCounterTerroristNum() {
         return theActivePlayers.Count - getTargetCounterTerroristNum();
+    }
+
+    public void addPlayerToQueuePlayers(CCSPlayerController aPlayer) {
+        theQueuePlayers.Add(aPlayer);
     }
 
     public List<CCSPlayerController> getActivePlayers() {
@@ -57,7 +59,7 @@ public class QueueManager {
                 var myPlayersToAdd = theQueuePlayers.Take(myPlayersToAddNum).ToList();
                 foreach (var aPlayer in myPlayersToAdd) {
                     theQueuePlayers.Remove(aPlayer);
-                    if (thePlayerManager.isPlayerValid(aPlayer)) {
+                    if (aPlayer.isPlayerValid()) {
                         theActivePlayers.Add(aPlayer);
                         aPlayer.SwitchTeam(CsTeam.CounterTerrorist);
                     }
@@ -85,11 +87,12 @@ public class QueueManager {
         }
 
         if (theActivePlayers.Count == theMaxActivePlayers) {
-            var myNonVipActivePlayers = theActivePlayers.Where(aPlayer => !AdminManager.PlayerHasPermissions(aPlayer, "@css/vip")).ToList();
+            List<CCSPlayerController> myNonVipActivePlayers = theActivePlayers.Where(aPlayer => !AdminManager.PlayerHasPermissions(aPlayer, "@css/vip")).ToList();
             int myRandomIndex = new Random().Next(myNonVipActivePlayers.Count);
 
-            var myRemovedPlayer = myNonVipActivePlayers[myRandomIndex];
+            CCSPlayerController myRemovedPlayer = myNonVipActivePlayers[myRandomIndex];
             myNonVipActivePlayers.Remove(myRemovedPlayer);
+            theQueuePlayers.Remove(myRemovedPlayer);
             myRemovedPlayer.PrintToChat("You have been moved to Queue due to a VIP.");
         }
         theActivePlayers.Add(aVipPlayer);

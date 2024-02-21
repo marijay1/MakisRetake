@@ -1,7 +1,9 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
+using CSPlus.Base.Entities;
 using MakisRetake.Configs;
 using MakisRetake.Enums;
 using MakisRetake.Managers;
@@ -21,25 +23,26 @@ public partial class MakisRetake {
     public HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo anInfo) {
         CCSPlayerController myPlayer = @event.Userid;
 
-        //Check if player is valid
-        if (!thePlayerManager.isPlayerValid(myPlayer)) {
+        if (!myPlayer.isPlayerValid()) {
             return HookResult.Continue;
         }
+
+        myPlayer.SwitchTeam(CsTeam.Spectator);
+        AddTimer(1.0f, () => myPlayer.ExecuteClientCommand("teammenu"));
+
+        theQueueManager.addPlayerToQueuePlayers(myPlayer);
 
         return HookResult.Continue;
     }
 
     [GameEventHandler]
     public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo anInfo) {
-        //skip warmup if needed
         if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod) {
             return HookResult.Continue;
         }
 
-        //choose bombsite
         theCurrentBombsite = (Bombsite)new Random().Next(0, 2);
 
-        //reset scores of players
         theGameManager.ResetPlayerScores();
 
         Random random = new Random();
@@ -48,33 +51,24 @@ public partial class MakisRetake {
         int randomIndex = random.Next(activeTerrorists.Count);
         thePlanter = activeTerrorists[randomIndex];
 
-        foreach (CCSPlayerController player in theQueueManager.getActivePlayers().Where(aPlayer => thePlayerManager.isPlayerPawnValid(aPlayer))) {
-            if (thePlayerManager.isPlayerValid(player)) {
+        foreach (CCSPlayerController player in theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.isPlayerPawnValid())) {
+            if (player.isPlayerValid()) {
                 MapSpawn myMapSpawn = theMapConfig!.getRandomNonPlanterSpawn(theCurrentBombsite, player.Team);
                 player.Teleport(myMapSpawn.theVector, myMapSpawn.theQAngle, new Vector(0f, 0f, 0f));
-
-
-
-                //remove weapons, armour, and bomb
-                //allocate weapons, grenades, equipment, and bomb
+                player.PrintToChat($"The bombsite is {theCurrentBombsite}!");
             }
-
         }
-
-        //announce bombsite
 
         return HookResult.Continue;
     }
 
     [GameEventHandler]
     public HookResult OnRoundFreezeEnd(EventRoundFreezeEnd @event, GameEventInfo anInfo) {
-        //skip warmup if needed
         if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod) {
             return HookResult.Continue;
         }
 
-        if (thePlayerManager.isPlayerValid(thePlanter) && thePlayerManager.isPlayerPawnValid(thePlanter)) {
-            //autoplant
+        if (thePlanter != null && thePlanter.isPlayerPawnValid()) {
             theGameManager.autoPlantBomb(thePlanter, theCurrentBombsite);
         }
 
@@ -83,7 +77,6 @@ public partial class MakisRetake {
 
     [GameEventHandler]
     public HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo anInfo) {
-        //skip warmup
         if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod) {
             return HookResult.Continue;
         }
@@ -97,7 +90,6 @@ public partial class MakisRetake {
     public HookResult OnBombDefused(EventBombDefused @event, GameEventInfo anInfo) {
         CCSPlayerController myPlayer = @event.Userid;
 
-        //add score to player
         theGameManager.AddScore(myPlayer, GameManager.ScoreForDefuse);
 
         return HookResult.Continue;
@@ -105,43 +97,40 @@ public partial class MakisRetake {
 
     [GameEventHandler(HookMode.Pre)]
     public HookResult OnPlayerTeam(EventPlayerTeam @event, GameEventInfo anInfo) {
-
+        if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod && Utilities.GetPlayers().Count >= 2) {
+            Server.ExecuteCommand("mp_warmup_end");
+            foreach (CCSPlayerController aPlayer in Utilities.GetPlayers().Where(aPlayer => aPlayer.isPlayerPawnValid() && aPlayer.PawnIsAlive)) {
+                aPlayer.PrintToChat("Enough players have joined. Starting game!");
+                aPlayer.CommitSuicide(true, true);
+            }
+        }
         var myPlayer = @event.Userid;
+        CsTeam myOldTeam = (CsTeam)@event.Team;
+        CsTeam myNewTeam = (CsTeam)@event.Team;
         @event.Silent = true;
 
-        if (!thePlayerManager.isPlayerValid(myPlayer)) {
+        if (!myPlayer.isPlayerValid()) {
             return HookResult.Continue;
         }
 
-        CsTeam myOldTeam = (CsTeam)@event.Oldteam;
-        CsTeam myNewTeam = (CsTeam)@event.Team;
-
-        if (myOldTeam == CsTeam.None) {
-            if (myOldTeam == myNewTeam) {
-                //Player selected auto-select
-                return HookResult.Continue;
-            } else if (myNewTeam == CsTeam.Spectator) {
-                //Player just joined the server
-                return HookResult.Continue;
-            }
-        }
-
-        if (theQueueManager.isPlayerActive(myPlayer)) {
-            if (myNewTeam == CsTeam.Spectator) {
+        if (myNewTeam == CsTeam.Spectator) {
+            if (theQueueManager.isPlayerActive(myPlayer)) {
                 theQueueManager.removePlayerFromQueues(myPlayer);
-                return HookResult.Continue;
             }
-
+            return HookResult.Continue;
         }
-        return HookResult.Continue;
+
+        if (myOldTeam == CsTeam.Spectator && myNewTeam != CsTeam.Spectator) {
+            theQueueManager.addPlayerToQueuePlayers(myPlayer);
+        }
+
+        return HookResult.Handled;
     }
 
     [GameEventHandler]
     public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo anInfo) {
-        //remove player from queues
         CCSPlayerController myPlayer = @event.Userid;
 
-        //Refactor this
         theQueueManager.removePlayerFromQueues(myPlayer);
 
         return HookResult.Continue;
@@ -149,15 +138,14 @@ public partial class MakisRetake {
 
     [GameEventHandler]
     public HookResult OnPlayerDeath(EventPlayerDeath @event, GameEventInfo anInfo) {
-
         CCSPlayerController myAttacker = @event.Attacker;
         CCSPlayerController myAssister = @event.Assister;
 
-        if (thePlayerManager.isPlayerValid(myAttacker)) {
+        if (myAttacker.isPlayerPawnValid()) {
             theGameManager.AddScore(myAttacker, GameManager.ScoreForKill);
         }
 
-        if (thePlayerManager.isPlayerValid(myAssister)) {
+        if (myAssister.isPlayerValid()) {
             theGameManager.AddScore(myAssister, GameManager.ScoreForAssist);
         }
 
@@ -166,10 +154,9 @@ public partial class MakisRetake {
 
     [GameEventHandler]
     public HookResult OnPlayerAwardedMvp(EventRoundMvp @event, GameEventInfo anInfo) {
-
         CCSPlayerController myMvp = @event.Userid;
 
-        if (thePlayerManager.isPlayerValid(myMvp)) {
+        if (myMvp.isPlayerValid()) {
             theGameManager.AddScore(myMvp, GameManager.ScoreForMvp);
         }
 

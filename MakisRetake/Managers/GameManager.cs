@@ -2,13 +2,12 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using MakisRetake.Enums;
+using CSPlus.Base.Entities;
 
 namespace MakisRetake.Managers;
 
 public class GameManager {
-
-    PlayerManager thePlayerManager;
-    QueueManager theQueueManager;
+    private QueueManager theQueueManager;
 
     private Dictionary<CCSPlayerController, int> thePlayerPoints = new Dictionary<CCSPlayerController, int>();
     private int theCurrentConsecutiveWins = 0;
@@ -22,20 +21,16 @@ public class GameManager {
     public const int ScoreForDefuse = 25;
     public const int ScoreForMvp = 35;
 
-
-    public GameManager(PlayerManager aPlayerManager, QueueManager aQueueManager) {
-        thePlayerManager = aPlayerManager;
+    public GameManager(QueueManager aQueueManager) {
         theQueueManager = aQueueManager;
     }
-
-
 
     public void ResetPlayerScores() {
         thePlayerPoints = new Dictionary<CCSPlayerController, int>();
     }
 
     public void AddScore(CCSPlayerController aPlayer, int aScore) {
-        if (!thePlayerManager.isPlayerValid(aPlayer)) {
+        if (!aPlayer.isPlayerValid()) {
             return;
         }
 
@@ -43,7 +38,6 @@ public class GameManager {
             thePlayerPoints[aPlayer] += aScore;
         }
     }
-
 
     public void handleRoundWin(CsTeam aWinningTeam) {
         theCurrentConsecutiveWins++;
@@ -98,7 +92,6 @@ public class GameManager {
         List<CCSPlayerController> myNewTerrorists = new();
         List<CCSPlayerController> myNewCounterTerrorists = new();
 
-        //Allocate new Terrorists
         CCSPlayerController myBestTerrorist = myOldTerrorists.MaxBy(p => thePlayerPoints[p])!;
         myNewTerrorists.Add(myBestTerrorist);
         myOldTerrorists.Remove(myBestTerrorist);
@@ -108,7 +101,6 @@ public class GameManager {
             myOldCounterTerrorists.Remove(myBestCounterTerrorist);
         }
 
-        //Allocate new Counter Terrorists
         myOldCounterTerrorists.ForEach(aPlayer => myNewCounterTerrorists.Add(aPlayer));
         myOldTerrorists.ForEach(aPlayer => myNewCounterTerrorists.Add(aPlayer));
 
@@ -116,15 +108,16 @@ public class GameManager {
     }
 
     private void setTeams(List<CCSPlayerController> aTerrorists, List<CCSPlayerController> aCounterTerrorists) {
-        aTerrorists.Where(aPlayer => thePlayerManager.isPlayerValid(aPlayer)).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.Terrorist));
-        aCounterTerrorists.Where(aPlayer => thePlayerManager.isPlayerValid(aPlayer)).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.CounterTerrorist));
+        aTerrorists.Where(aPlayer => aPlayer.isPlayerValid()).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.Terrorist));
+        aCounterTerrorists.Where(aPlayer => aPlayer.isPlayerValid()).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.CounterTerrorist));
     }
 
+    //Code from https://github.com/B3none/cs2-retakes
     public void autoPlantBomb(CCSPlayerController aPlayer, Bombsite aBombsite) {
         var myPlayerPawn = aPlayer.PlayerPawn;
         var myPlantedBomb = Utilities.CreateEntityByName<CPlantedC4>("planted_c4");
 
-        if (!thePlayerManager.isPlayerPawnValid(aPlayer) || !thePlayerManager.isPlayerValid(aPlayer) || aPlayer.AbsOrigin == null
+        if (!aPlayer.isPlayerPawnValid() || !aPlayer.isPlayerValid() || aPlayer.AbsOrigin == null
             || myPlantedBomb == null || myPlantedBomb.AbsOrigin == null) {
             //restart round?
             return;
@@ -150,8 +143,8 @@ public class GameManager {
         sendBombPlantEvent(aPlayer, aBombsite);
     }
 
+    //Code from https://github.com/B3none/cs2-retakes
     private void sendBombPlantEvent(CCSPlayerController aBombPlanter, Bombsite aBombsite) {
-
         if (aBombPlanter.PlayerPawn.Value == null) {
             return;
         }
@@ -163,6 +156,4 @@ public class GameManager {
 
         NativeAPI.FireEvent(myBombPlantEvent, false);
     }
-
-
 }

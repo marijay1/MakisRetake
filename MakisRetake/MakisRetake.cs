@@ -24,15 +24,13 @@ public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
     private CCSPlayerController? thePlanter;
 
     public MakisConfig Config { get; set; } = null!;
-    private readonly PlayerManager thePlayerManager;
     private GameManager theGameManager;
     private QueueManager theQueueManager;
     private MapConfig? theMapConfig;
 
     public MakisRetake() {
-        thePlayerManager = new PlayerManager();
-        theQueueManager = new QueueManager(thePlayerManager);
-        theGameManager = new GameManager(thePlayerManager, theQueueManager);
+        theQueueManager = new QueueManager();
+        theGameManager = new GameManager(theQueueManager);
     }
 
     public void OnConfigParsed(MakisConfig aMakiConfig) {
