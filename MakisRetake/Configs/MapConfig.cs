@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API.Modules.Utils;
+﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using MakisRetake.Configs.JsonProviders;
 using MakisRetake.Enums;
 using System.Text.Json;
@@ -18,6 +19,7 @@ public class MapConfig {
         theMapSpawnDirectory = Path.Combine(Path.GetDirectoryName(aModuleDirectory), "..", "configs", "plugins", "MakisRetake", "MapSpawns");
         theMapSpawnPath = Path.Combine(theMapSpawnDirectory, $"{theMapName}.json");
         theMapSpawns = new List<MapSpawn>();
+        load();
     }
 
     //TODO require user to be in edit mode to add/remove spawns
@@ -26,33 +28,6 @@ public class MapConfig {
 
     public String getMapName() {
         return theMapName;
-    }
-
-    public MapSpawn getPlanterSpawn(Bombsite aBombsite) {
-        List<MapSpawn> myPlanterSpawns = theMapSpawns.Where(aSpawn => aSpawn.theCanBePlanter && aSpawn.theBombsite.Equals(aBombsite)).ToList();
-
-        if (myPlanterSpawns.Count == 0) {
-            //put game in edit mode
-            throw new Exception("No planter spawns!!!");
-        }
-
-        return myPlanterSpawns[new Random().Next(0, myPlanterSpawns.Count)];
-    }
-
-    public MapSpawn getRandomNonPlanterSpawn(Bombsite aBombsite, CsTeam aTeam) {
-        List<MapSpawn> myNonPlanterSpawns = theMapSpawns.Where(aSpawn => !aSpawn.theCanBePlanter && aSpawn.theBombsite.Equals(aBombsite) && aSpawn.theTeam.Equals(aTeam)).ToList();
-
-        if (myNonPlanterSpawns.Count == 0) {
-            //put game in edit mode
-            throw new Exception("No planter spawns!!!");
-        }
-
-        MapSpawn myMapSpawn = myNonPlanterSpawns.ElementAtOrDefault(new Random().Next(myNonPlanterSpawns.Count))!;
-        while (myMapSpawn.theIsInUse) {
-            myMapSpawn = myNonPlanterSpawns.ElementAtOrDefault(new Random().Next(myNonPlanterSpawns.Count))!;
-        }
-
-        return myMapSpawn;
     }
 
     public List<MapSpawn> getMapSpawns() {
@@ -66,6 +41,7 @@ public class MapConfig {
                 JsonSerializerOptions myOptions = new JsonSerializerOptions();
                 myOptions.Converters.Add(new VectorProvider());
                 myOptions.Converters.Add(new QAngleProvider());
+                myOptions.IncludeFields = true;
 
                 theMapSpawns = JsonSerializer.Deserialize<List<MapSpawn>>(myJsonData, myOptions);
 
@@ -76,8 +52,10 @@ public class MapConfig {
                 theMapSpawns = new List<MapSpawn>();
                 save();
             }
-        } catch (Exception) {
-            throw new Exception();
+        } catch (JsonException ex) {
+            throw new Exception("Error deserializing JSON data: " + ex.Message);
+        } catch (IOException ex) {
+            throw new Exception("Error reading or writing JSON file: " + ex.Message);
         }
     }
 
@@ -85,6 +63,7 @@ public class MapConfig {
         JsonSerializerOptions myOptions = new JsonSerializerOptions();
         myOptions.Converters.Add(new VectorProvider());
         myOptions.Converters.Add(new QAngleProvider());
+        myOptions.IncludeFields = true;
         myOptions.WriteIndented = true;
 
         string myJsonString = JsonSerializer.Serialize(theMapSpawns, myOptions);

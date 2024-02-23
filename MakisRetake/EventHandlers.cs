@@ -1,6 +1,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 using CSPlus.Base.Entities;
@@ -13,10 +14,8 @@ namespace MakisRetake;
 public partial class MakisRetake {
 
     private void OnMapStart(string aMapName) {
-        if (theMapConfig == null || theMapConfig.getMapName().Equals(Server.MapName)) {
-            theMapConfig = new MapConfig(ModuleDirectory, Server.MapName);
-            theMapConfig.load();
-        }
+        executeRetakesConfiguration();
+        theMapConfig = new MapConfig(ModuleDirectory, aMapName);
     }
 
     [GameEventHandler]
@@ -28,7 +27,6 @@ public partial class MakisRetake {
         }
 
         myPlayer.SwitchTeam(CsTeam.Spectator);
-        AddTimer(1.0f, () => myPlayer.ExecuteClientCommand("teammenu"));
 
         theQueueManager.addPlayerToQueuePlayers(myPlayer);
 
@@ -46,18 +44,12 @@ public partial class MakisRetake {
         theGameManager.ResetPlayerScores();
 
         Random random = new Random();
-        List<CCSPlayerController> activeTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team.Equals(CsTeam.Terrorist)).ToList();
+        List<CCSPlayerController> activeTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.Terrorist).ToList();
 
         int randomIndex = random.Next(activeTerrorists.Count);
         thePlanter = activeTerrorists[randomIndex];
 
-        foreach (CCSPlayerController player in theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.isPlayerPawnValid())) {
-            if (player.isPlayerValid()) {
-                MapSpawn myMapSpawn = theMapConfig!.getRandomNonPlanterSpawn(theCurrentBombsite, player.Team);
-                player.Teleport(myMapSpawn.theVector, myMapSpawn.theQAngle, new Vector(0f, 0f, 0f));
-                player.PrintToChat($"The bombsite is {theCurrentBombsite}!");
-            }
-        }
+        handleSpawns(theCurrentBombsite, theMapConfig);
 
         return HookResult.Continue;
     }
@@ -95,6 +87,10 @@ public partial class MakisRetake {
         return HookResult.Continue;
     }
 
+    public HookResult OnCommandJoinTeam(CCSPlayerController? aPlayer, CommandInfo anInfo) {
+        return HookResult.Handled;
+    }
+
     [GameEventHandler(HookMode.Pre)]
     public HookResult OnPlayerTeam(EventPlayerTeam @event, GameEventInfo anInfo) {
         if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod && Utilities.GetPlayers().Count >= 2) {
@@ -105,9 +101,12 @@ public partial class MakisRetake {
             }
         }
         var myPlayer = @event.Userid;
-        CsTeam myOldTeam = (CsTeam)@event.Team;
+        CsTeam myOldTeam = (CsTeam)@event.Oldteam;
         CsTeam myNewTeam = (CsTeam)@event.Team;
         @event.Silent = true;
+
+        Server.PrintToChatAll($"Old Team: {myOldTeam}");
+        Server.PrintToChatAll($"New Team: {myNewTeam}");
 
         if (!myPlayer.isPlayerValid()) {
             return HookResult.Continue;
@@ -124,7 +123,7 @@ public partial class MakisRetake {
             theQueueManager.addPlayerToQueuePlayers(myPlayer);
         }
 
-        return HookResult.Handled;
+        return HookResult.Continue;
     }
 
     [GameEventHandler]

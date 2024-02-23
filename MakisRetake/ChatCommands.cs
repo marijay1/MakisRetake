@@ -3,12 +3,14 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
+using CSPlus.Base.Entities;
 using MakisRetake.Configs;
 using MakisRetake.Enums;
 
 namespace MakisRetake;
 
 public partial class MakisRetake {
+
     [ConsoleCommand("css_addspawn", "Adds a spawn point to the retakes config.")]
     [CommandHelper(minArgs: 3, usage: "[T/CT] [A/B] [Y/N (planter spawn)]", whoCanExecute: CommandUsage.CLIENT_ONLY)]
     [RequiresPermissions("@css/admin")]
@@ -17,7 +19,7 @@ public partial class MakisRetake {
             //Player is null
             return;
         }
-        if (!thePlayerManager.isPlayerPawnValid(aPlayer)) {
+        if (!aPlayer.isPlayerPawnValid()) {
             //player pawn is not valid
             return;
         }
@@ -71,7 +73,7 @@ public partial class MakisRetake {
             //Player is null
             return;
         }
-        if (!thePlayerManager.isPlayerPawnValid(aPlayer)) {
+        if (!aPlayer.isPlayerPawnValid()) {
             //player pawn is not valid
             return;
         }
