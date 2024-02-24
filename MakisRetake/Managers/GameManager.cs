@@ -128,7 +128,7 @@ public class GameManager {
         anActivePlayers.Where(aPlayer => aPlayer.isPlayerValid() && aPlayer.Team == CsTeam.CounterTerrorist).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.Terrorist));
     }
 
-    public void handleSpawns(Bombsite aBombsite, MapConfig aMapConfig, CCSPlayerController aPlanter, ) {
+    public void handleSpawns(Bombsite aBombsite, MapConfig aMapConfig, CCSPlayerController aPlanter) {
         List<MapSpawn> mySpawns = aMapConfig.getMapSpawns().Where(aSpawn => aSpawn.theBombsite == aBombsite).ToList();
         Random myRandom = new Random();
 
