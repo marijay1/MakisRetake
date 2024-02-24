@@ -70,7 +70,12 @@ public class GameManager {
     private void scrambleTeams() {
         List<CCSPlayerController> myActivePlayers = theQueueManager.getActivePlayers();
 
+        if (myActivePlayers.Count == 2) {
+            switchTeams(myActivePlayers);
+        }
+
         Random random = new Random();
+
         for (int i = myActivePlayers.Count - 1; i > 0; i--) {
             int j = random.Next(i + 1);
             CCSPlayerController myTempPlayer = myActivePlayers[i];
@@ -78,7 +83,7 @@ public class GameManager {
             myActivePlayers[j] = myTempPlayer;
         }
 
-        List<CCSPlayerController> myNewTerrorists = myActivePlayers.Take(theQueueManager.getTargetTerroristNum()).ToList();
+        List<CCSPlayerController> myNewTerrorists = myActivePlayers.Take(myActivePlayers.Count - theQueueManager.getTargetCounterTerroristNum()).ToList();
         List<CCSPlayerController> myNewCounterTerrorists = myActivePlayers.Except(myNewTerrorists).ToList();
 
         setTeams(myNewTerrorists, myNewCounterTerrorists);
@@ -86,11 +91,16 @@ public class GameManager {
 
     private void balanceTeams() {
         theQueueManager.updateQueue();
-        List<CCSPlayerController> myOldTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.Terrorist).ToList();
-        List<CCSPlayerController> myOldCounterTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.CounterTerrorist).ToList();
+        List<CCSPlayerController> myActivePlayers = theQueueManager.getActivePlayers();
+        List<CCSPlayerController> myOldTerrorists = myActivePlayers.Where(aPlayer => aPlayer.Team == CsTeam.Terrorist).ToList();
+        List<CCSPlayerController> myOldCounterTerrorists = myActivePlayers.Where(aPlayer => aPlayer.Team == CsTeam.CounterTerrorist).ToList();
 
         List<CCSPlayerController> myNewTerrorists = new();
         List<CCSPlayerController> myNewCounterTerrorists = new();
+
+        if (myActivePlayers.Count == 2) {
+            switchTeams(myActivePlayers);
+        }
 
         CCSPlayerController myBestTerrorist = myOldTerrorists.MaxBy(p => thePlayerPoints[p])!;
         myNewTerrorists.Add(myBestTerrorist);
@@ -110,6 +120,11 @@ public class GameManager {
     private void setTeams(List<CCSPlayerController> aTerrorists, List<CCSPlayerController> aCounterTerrorists) {
         aTerrorists.Where(aPlayer => aPlayer.isPlayerValid()).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.Terrorist));
         aCounterTerrorists.Where(aPlayer => aPlayer.isPlayerValid()).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.CounterTerrorist));
+    }
+
+    private void switchTeams(List<CCSPlayerController> anActivePlayers) {
+        anActivePlayers.Where(aPlayer => aPlayer.isPlayerValid() && aPlayer.Team == CsTeam.Terrorist).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.CounterTerrorist));
+        anActivePlayers.Where(aPlayer => aPlayer.isPlayerValid() && aPlayer.Team == CsTeam.CounterTerrorist).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.Terrorist));
     }
 
     //Code from https://github.com/B3none/cs2-retakes

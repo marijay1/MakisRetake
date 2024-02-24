@@ -35,9 +35,11 @@ public partial class MakisRetake {
 
     [GameEventHandler]
     public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo anInfo) {
-        if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod) {
+        CCSGameRules myGameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!;
+        if (myGameRules.WarmupPeriod) {
             return HookResult.Continue;
         }
+        myGameRules.IsValveDS = true;
 
         theCurrentBombsite = (Bombsite)new Random().Next(0, 2);
 
@@ -47,6 +49,12 @@ public partial class MakisRetake {
         List<CCSPlayerController> activeTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.Terrorist).ToList();
 
         int randomIndex = random.Next(activeTerrorists.Count);
+        if (randomIndex == 0) {
+            foreach (CCSPlayerController aPlayer in Utilities.GetPlayers().Where(aPlayer => aPlayer.isPlayerPawnValid() && aPlayer.PawnIsAlive)) {
+                aPlayer.PrintToChat("No Planter. Skipping round.");
+                aPlayer.CommitSuicide(true, true);
+            }
+        }
         thePlanter = activeTerrorists[randomIndex];
 
         handleSpawns(theCurrentBombsite, theMapConfig);

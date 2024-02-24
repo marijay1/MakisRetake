@@ -6,7 +6,6 @@ using CSPlus.Base.Entities;
 namespace MakisRetake.Managers;
 
 public class QueueManager {
-
     private readonly int theMaxActivePlayers = 9;
     private readonly float theTerroristRatio = 0.45f;
 
@@ -23,7 +22,7 @@ public class QueueManager {
     }
 
     public int getTargetCounterTerroristNum() {
-        return theActivePlayers.Count - getTargetCounterTerroristNum();
+        return theActivePlayers.Count - getTargetTerroristNum();
     }
 
     public void addPlayerToQueuePlayers(CCSPlayerController aPlayer) {
@@ -64,7 +63,6 @@ public class QueueManager {
                         aPlayer.SwitchTeam(CsTeam.CounterTerrorist);
                     }
                 }
-
             }
 
             foreach (var aPlayer in theQueuePlayers) {
