@@ -1,19 +1,17 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 using MakisRetake.Configs;
 using MakisRetake.Enums;
 using MakisRetake.Managers;
-using System.Linq;
 using System.Text;
 
 namespace MakisRetake;
 
-[MinimumApiVersion(167)]
+[MinimumApiVersion(172)]
 public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
-    private const string Version = "0.0.1";
+    private const string Version = "1.0.0";
 
     public override string ModuleName => "Maki's Retake";
     public override string ModuleVersion => Version;
@@ -112,28 +110,5 @@ public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
         }
 
         Server.ExecuteCommand("exec MakisRetake/retakes.cfg");
-    }
-
-    public void handleSpawns(Bombsite aBombsite, MapConfig aMapConfig) {
-        List<MapSpawn> mySpawns = aMapConfig.getMapSpawns().Where(aSpawn => aSpawn.theBombsite == aBombsite).ToList();
-        Random myRandom = new Random();
-
-        if (mySpawns.Count == 0) {
-            Console.WriteLine("No Spawns!");
-            return;
-        }
-
-        foreach (var myPlayer in theQueueManager.getActivePlayers()) {
-            List<MapSpawn> myFilteredSpawns = mySpawns.Where(aSpawn => !aSpawn.theCanBePlanter && aSpawn.theTeam == myPlayer.Team).ToList();
-            MapSpawn mySpawn = myPlayer == thePlanter ? mySpawns.FirstOrDefault(aSpawn => aSpawn.theCanBePlanter) : myFilteredSpawns.FirstOrDefault();
-
-            if (mySpawn != null) {
-                myPlayer.PlayerPawn.Value!.Teleport(mySpawn.theVector, mySpawn.theQAngle, new Vector());
-                mySpawns.Remove(mySpawn);
-            } else {
-                Console.WriteLine(myPlayer == thePlanter ? "No planter spawns!" : "No non-planter spawns!");
-            }
-            myPlayer.PrintToChat($"The bombsite is {theCurrentBombsite}!");
-        }
     }
 }

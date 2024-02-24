@@ -1,7 +1,4 @@
-﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Utils;
-using MakisRetake.Configs.JsonProviders;
-using MakisRetake.Enums;
+﻿using MakisRetake.Configs.JsonProviders;
 using System.Text.Json;
 
 namespace MakisRetake.Configs;

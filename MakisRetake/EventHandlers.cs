@@ -2,7 +2,6 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 using CSPlus.Base.Entities;
 using MakisRetake.Configs;
@@ -57,7 +56,7 @@ public partial class MakisRetake {
         }
         thePlanter = activeTerrorists[randomIndex];
 
-        handleSpawns(theCurrentBombsite, theMapConfig);
+        theGameManager.handleSpawns(theCurrentBombsite, theMapConfig);
 
         return HookResult.Continue;
     }
@@ -112,9 +111,6 @@ public partial class MakisRetake {
         CsTeam myOldTeam = (CsTeam)@event.Oldteam;
         CsTeam myNewTeam = (CsTeam)@event.Team;
         @event.Silent = true;
-
-        Server.PrintToChatAll($"Old Team: {myOldTeam}");
-        Server.PrintToChatAll($"New Team: {myNewTeam}");
 
         if (!myPlayer.isPlayerValid()) {
             return HookResult.Continue;

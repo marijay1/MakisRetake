@@ -15,52 +15,30 @@ public partial class MakisRetake {
     [CommandHelper(minArgs: 3, usage: "[T/CT] [A/B] [Y/N (planter spawn)]", whoCanExecute: CommandUsage.CLIENT_ONLY)]
     [RequiresPermissions("@css/admin")]
     public void AddSpawnCommand(CCSPlayerController? aPlayer, CommandInfo aCommandInfo) {
-        if (aPlayer == null) {
-            //Player is null
-            return;
-        }
-        if (!aPlayer.isPlayerPawnValid()) {
-            //player pawn is not valid
+        if (aPlayer == null || !aPlayer.isPlayerPawnValid()) {
             return;
         }
 
         if (aCommandInfo.ArgCount != 4) {
-            //Invalid number of arguments
             aCommandInfo.ReplyToCommand("!addspawn [T/CT] [A/B] [Y/N (planter spawn)]");
+            return;
         }
 
         string myTeamString = aCommandInfo.GetArg(1).ToUpper();
         string myBombsiteString = aCommandInfo.GetArg(2).ToUpper();
         string myPlanterSpawnString = aCommandInfo.GetArg(3).ToUpper();
 
-        if (myTeamString == null &&
-            myTeamString != "T" &&
-            myTeamString != "CT") {
-            //Team is invalid
+        if (!new[] { "T", "CT" }.Contains(myTeamString) || !new[] { "A", "B" }.Contains(myBombsiteString)) {
+            aCommandInfo.ReplyToCommand("!addspawn [T/CT] [A/B] [Y/N (planter spawn)]");
             return;
         }
 
-        CsTeam myTeam = myTeamString == "T" ? CsTeam.Terrorist : CsTeam.CounterTerrorist;
+        bool myPlanterSpawn = myPlanterSpawnString == "Y";
 
-        if (myBombsiteString == null &&
-            myBombsiteString != "A" &&
-            myBombsiteString != "B") {
-            //Bombsite is invalid
-            return;
-        }
-
-        Bombsite myBombsite = myBombsiteString == "A" ? Bombsite.A : Bombsite.B;
-
-        if (myPlanterSpawnString == null &&
-            myPlanterSpawnString != "Y" &&
-            myPlanterSpawnString != "N") {
-            //planter boolean is invalid or blank, defaulting to false
-            myPlanterSpawnString = "N";
-        }
-
-        bool myPlanterSpawn = myPlanterSpawnString == "Y" ? true : false;
-
-        MapSpawn myMapSpawn = new MapSpawn(aPlayer.PlayerPawn.Value!.AbsOrigin!, aPlayer.PlayerPawn.Value!.AbsRotation!, myTeam, myBombsite, myPlanterSpawn);
+        MapSpawn myMapSpawn = new MapSpawn(aPlayer.PlayerPawn.Value!.AbsOrigin!, aPlayer.PlayerPawn.Value!.AbsRotation!,
+                                            myTeamString == "T" ? CsTeam.Terrorist : CsTeam.CounterTerrorist,
+                                            myBombsiteString == "A" ? Bombsite.A : Bombsite.B,
+                                            myPlanterSpawn);
 
         theMapConfig.addSpawn(myMapSpawn);
     }
@@ -69,37 +47,30 @@ public partial class MakisRetake {
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     [RequiresPermissions("@css/admin")]
     public void RemoveSpawnCommand(CCSPlayerController? aPlayer, CommandInfo aCommandInfo) {
-        if (aPlayer == null) {
-            //Player is null
-            return;
-        }
-        if (!aPlayer.isPlayerPawnValid()) {
-            //player pawn is not valid
+        if (aPlayer == null || !aPlayer.isPlayerPawnValid()) {
             return;
         }
 
         Vector myPlayerVector = aPlayer.PlayerPawn.Value!.AbsOrigin!;
-        double myClosestSpawnDistance = 9999.9;
-        MapSpawn? myClosestSpawn = null;
+        double closestSpawnDistance = double.MaxValue;
+        MapSpawn? closestSpawn = null;
 
         foreach (MapSpawn aMapSpawn in theMapConfig.getMapSpawns()) {
-            Vector mySpawnVector = aMapSpawn.theVector;
+            Vector spawnVector = aMapSpawn.theVector;
 
-            double myDistanceX = mySpawnVector.X - myPlayerVector.X;
-            double myDistanceY = mySpawnVector.Y - myPlayerVector.Y;
+            double distanceX = spawnVector.X - myPlayerVector.X;
+            double distanceY = spawnVector.Y - myPlayerVector.Y;
 
-            double myDistance = Math.Sqrt(Math.Pow(myDistanceX, 2) + Math.Pow(myDistanceY, 2));
+            double distance = Math.Sqrt(Math.Pow(distanceX, 2) + Math.Pow(distanceY, 2));
 
-            if (myDistance > myClosestSpawnDistance) {
-                continue;
-            }
+            if (distance > closestSpawnDistance) continue;
 
-            myClosestSpawnDistance = myDistance;
-            myClosestSpawn = aMapSpawn;
+            closestSpawnDistance = distance;
+            closestSpawn = aMapSpawn;
         }
 
-        if (myClosestSpawn != null) {
-            theMapConfig.removeSpawn(myClosestSpawn);
+        if (closestSpawn != null) {
+            theMapConfig.removeSpawn(closestSpawn);
         }
     }
 }
