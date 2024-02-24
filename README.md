@@ -27,6 +27,8 @@ This plugin was created for my own server, so I will not go out of my way to add
 
 - [ ] Add better feedback to the player/admin
 
+- [ ] Add better Logging
+
 
 ## Installation
 
