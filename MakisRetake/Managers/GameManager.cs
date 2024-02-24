@@ -8,22 +8,24 @@ using MakisRetake.Enums;
 namespace MakisRetake.Managers;
 
 public class GameManager {
-    private QueueManager theQueueManager;
-
-    private Dictionary<CCSPlayerController, int> thePlayerPoints = new Dictionary<CCSPlayerController, int>();
-    private int theCurrentConsecutiveWins = 0;
-    private CsTeam theLastWinningTeam = CsTeam.None;
-    private readonly int theConsecutiveWinsToScramble = 5;
-    private readonly int theWinsToBreakStreak = 3;
-    private readonly float theWinRatioToWarn = 0.60f;
-
     public const int ScoreForKill = 50;
     public const int ScoreForAssist = 25;
     public const int ScoreForDefuse = 25;
     public const int ScoreForMvp = 35;
 
-    public GameManager(QueueManager aQueueManager) {
+    private int theCurrentConsecutiveWins = 0;
+    private readonly int theWinsToBreakStreak = 3;
+    private readonly float theWinRatioToWarn = 0.60f;
+    private CsTeam theLastWinningTeam = CsTeam.None;
+
+    private Dictionary<CCSPlayerController, int> thePlayerPoints = new Dictionary<CCSPlayerController, int>();
+
+    private QueueManager theQueueManager;
+    private RetakesConfig theRetakesConfig;
+
+    public GameManager(QueueManager aQueueManager, MakisConfig aConfig) {
         theQueueManager = aQueueManager;
+        theRetakesConfig = aConfig.theRetakesConfig;
     }
 
     public void ResetPlayerScores() {
@@ -54,12 +56,12 @@ public class GameManager {
         }
 
         if (aWinningTeam == CsTeam.Terrorist) {
-            if (theCurrentConsecutiveWins >= theConsecutiveWinsToScramble) {
+            if (theCurrentConsecutiveWins >= theRetakesConfig.theConsecutiveRoundsToScramble) {
                 Server.PrintToChatAll($"The Terrorist have won {theCurrentConsecutiveWins} rounds in a row! Teams are being scrambled.");
                 scrambleTeams();
                 theCurrentConsecutiveWins = 0;
-            } else if (theCurrentConsecutiveWins > (theConsecutiveWinsToScramble * theWinRatioToWarn)) {
-                Server.PrintToChatAll($"The Terrorist have won {theCurrentConsecutiveWins} rounds in a row! {theConsecutiveWinsToScramble - theCurrentConsecutiveWins} more rounds until scramble.");
+            } else if (theCurrentConsecutiveWins > (theRetakesConfig.theConsecutiveRoundsToScramble * theWinRatioToWarn)) {
+                Server.PrintToChatAll($"The Terrorist have won {theCurrentConsecutiveWins} rounds in a row! {theRetakesConfig.theConsecutiveRoundsToScramble - theCurrentConsecutiveWins} more rounds until scramble.");
             }
         }
 

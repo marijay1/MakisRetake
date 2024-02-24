@@ -2,21 +2,22 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Utils;
 using CSPlus.Base.Entities;
+using MakisRetake.Configs;
 
 namespace MakisRetake.Managers;
 
 public class QueueManager {
-    private readonly int theMaxActivePlayers = 9;
-    private readonly float theTerroristRatio = 0.45f;
-
     private List<CCSPlayerController> theQueuePlayers = new();
     private List<CCSPlayerController> theActivePlayers = new();
 
-    public QueueManager() {
+    private RetakesConfig theRetakesConfig;
+
+    public QueueManager(MakisConfig aConfig) {
+        theRetakesConfig = aConfig.theRetakesConfig;
     }
 
     public int getTargetTerroristNum() {
-        var myTerroristNum = (int)Math.Round(theTerroristRatio * theActivePlayers.Count);
+        var myTerroristNum = (int)Math.Round(theRetakesConfig.theTerroristRatio * theActivePlayers.Count);
 
         return myTerroristNum > 0 ? myTerroristNum : 1;
     }
@@ -51,7 +52,7 @@ public class QueueManager {
             }
         }
 
-        var myPlayersToAddNum = theMaxActivePlayers - theActivePlayers.Count;
+        var myPlayersToAddNum = theRetakesConfig.theMaxPlayers - theActivePlayers.Count;
 
         if (theQueuePlayers.Count > 0) {
             if (myPlayersToAddNum > 0) {
@@ -84,7 +85,7 @@ public class QueueManager {
             return;
         }
 
-        if (theActivePlayers.Count == theMaxActivePlayers) {
+        if (theActivePlayers.Count == theRetakesConfig.theMaxPlayers) {
             List<CCSPlayerController> myNonVipActivePlayers = theActivePlayers.Where(aPlayer => !AdminManager.PlayerHasPermissions(aPlayer, "@css/vip")).ToList();
             int myRandomIndex = new Random().Next(myNonVipActivePlayers.Count);
 

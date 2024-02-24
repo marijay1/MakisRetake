@@ -30,8 +30,6 @@ public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
     private MapConfig? theMapConfig;
 
     public MakisRetake() {
-        theQueueManager = new QueueManager();
-        theGameManager = new GameManager(theQueueManager);
     }
 
     public void OnConfigParsed(MakisConfig aMakiConfig) {
@@ -41,6 +39,9 @@ public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
     public override void Load(bool aHotReload) {
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
         AddCommandListener("jointeam", OnCommandJoinTeam, HookMode.Pre);
+
+        theQueueManager = new QueueManager(Config);
+        theGameManager = new GameManager(theQueueManager, Config);
 
         if (theGameManager == null) {
             Console.WriteLine($"{LogPrefix}Game Manager is not loaded!");
