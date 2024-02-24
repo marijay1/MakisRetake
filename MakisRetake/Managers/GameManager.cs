@@ -128,7 +128,7 @@ public class GameManager {
         anActivePlayers.Where(aPlayer => aPlayer.isPlayerValid() && aPlayer.Team == CsTeam.CounterTerrorist).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.Terrorist));
     }
 
-    public void handleSpawns(Bombsite aBombsite, MapConfig aMapConfig) {
+    public void handleSpawns(Bombsite aBombsite, MapConfig aMapConfig, CCSPlayerController aPlanter, ) {
         List<MapSpawn> mySpawns = aMapConfig.getMapSpawns().Where(aSpawn => aSpawn.theBombsite == aBombsite).ToList();
         Random myRandom = new Random();
 
@@ -139,15 +139,14 @@ public class GameManager {
 
         foreach (var myPlayer in theQueueManager.getActivePlayers()) {
             List<MapSpawn> myFilteredSpawns = mySpawns.Where(aSpawn => !aSpawn.theCanBePlanter && aSpawn.theTeam == myPlayer.Team).ToList();
-            MapSpawn mySpawn = myPlayer == thePlanter ? mySpawns.FirstOrDefault(aSpawn => aSpawn.theCanBePlanter) : myFilteredSpawns.FirstOrDefault();
+            MapSpawn mySpawn = myPlayer == aPlanter ? mySpawns.FirstOrDefault(aSpawn => aSpawn.theCanBePlanter) : myFilteredSpawns.FirstOrDefault();
 
             if (mySpawn != null) {
                 myPlayer.PlayerPawn.Value!.Teleport(mySpawn.theVector, mySpawn.theQAngle, new Vector());
                 mySpawns.Remove(mySpawn);
             } else {
-                Console.WriteLine(myPlayer == thePlanter ? "No planter spawns!" : "No non-planter spawns!");
+                Console.WriteLine(myPlayer == aPlanter ? "No planter spawns!" : "No non-planter spawns!");
             }
-            myPlayer.PrintToChat($"The bombsite is {theCurrentBombsite}!");
         }
     }
 
