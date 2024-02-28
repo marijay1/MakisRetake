@@ -152,6 +152,29 @@ public class GameManager {
         }
     }
 
+    public void announceBombsite(Bombsite aBombsite) {
+        List<string> myAnnouncers = new List<string> {
+                                    "balkan_epic",
+                                    "leet_epic",
+                                    "professional_epic",
+                                    "professional_fem",
+                                    "seal_epic",
+                                    "swat_epic",
+                                    "swat_fem"
+                                    };
+
+        int myNumberOfCounterTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.CounterTerrorist).ToList().Count;
+        int myNumberOfTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.Terrorist).ToList().Count;
+
+        string myAnnouncer = myAnnouncers[new Random().Next(0, myAnnouncers.Count)];
+
+        foreach (CCSPlayerController myPlayer in Utilities.GetPlayers()) {
+            myPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.bombsiteannouncement.chat", aBombsite.ToString(), myNumberOfCounterTerrorists, myNumberOfTerrorists]}");
+            myPlayer.ExecuteClientCommand("snd_toolvolume .1");
+            myPlayer.ExecuteClientCommand($"play sounds/vo/agents/{myAnnouncer}/loc_{aBombsite.ToString().ToLower()}_01");
+        }
+    }
+
     //Code from https://github.com/B3none/cs2-retakes
     public void autoPlantBomb(CCSPlayerController aPlayer, Bombsite aBombsite) {
         var myPlantedBomb = Utilities.CreateEntityByName<CPlantedC4>("planted_c4");

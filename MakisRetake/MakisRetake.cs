@@ -11,7 +11,7 @@ namespace MakisRetake;
 
 [MinimumApiVersion(176)]
 public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
-    private const string Version = "1.1.0";
+    private const string Version = "1.1.2";
 
     public override string ModuleName => "Maki's Retake";
     public override string ModuleVersion => Version;

@@ -2,8 +2,9 @@
   "mr.retakes.noplanter": "Oops! No planter. Skipping round.",
   "mr.retakes.enoughplayers": "Enough players have joined. Starting game!",
   "mr.retakes.gamefull": "The game is currently full! Please wait for a spot to open up.",
-  "mr.retakes.movedtospec": "You have been moved to spectator due to a VIP joining.",
-  "mr.retakes.breakwinstreak": "The {0} have broken the {1}'s winstreak of {2}!",
-  "mr.retakes.scramble": "The Terrorist have won {0} rounds in a row! Teams are being scrambled.",
-  "mr.retakes.scramblewarn": "The Terrorist have won {0} rounds in a row! {1} more rounds until scramble."
+  "mr.retakes.movedtospec": "You have been moved to spectator due to a {gold}VIP {white}joining.",
+  "mr.retakes.breakwinstreak": "The {0} have broken the {1}'s winstreak of {lightpurple}{2}{white}!",
+  "mr.retakes.scramble": "The Terrorist have won {lightpurple}{0} {white}rounds in a row! Teams are being scrambled.",
+  "mr.retakes.scramblewarn": "The Terrorist have won {lightpurple}{0} {white}rounds in a row! {lightpurple}{1} {white}more rounds until scramble.",
+  "mr.retakes.bombsiteannouncement.chat": "Retake {lightpurple}{0}{white}: {lightblue}{1} CTs {white}vs {lightred}{2} Ts"
 }

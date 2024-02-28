@@ -56,6 +56,7 @@ public partial class MakisRetake {
         }
         thePlanter = activeTerrorists[randomIndex];
 
+        theGameManager.announceBombsite(theCurrentBombsite);
         theGameManager.handleSpawns(theCurrentBombsite, theMapConfig, thePlanter);
 
         return HookResult.Continue;
