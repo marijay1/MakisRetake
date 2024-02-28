@@ -95,7 +95,37 @@ public partial class MakisRetake {
     }
 
     public HookResult OnCommandJoinTeam(CCSPlayerController? aPlayer, CommandInfo anInfo) {
-        return HookResult.Handled;
+        if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod) {
+            return HookResult.Continue;
+        }
+
+        if (!aPlayer.isPlayerValid()) {
+            return HookResult.Handled;
+        }
+
+        if (anInfo.ArgCount < 2 || !Enum.TryParse<CsTeam>(anInfo.GetArg(1), out CsTeam myNewTeam)) {
+            return HookResult.Handled;
+        }
+
+        CsTeam myOldTeam = aPlayer.Team;
+
+        if (myNewTeam == CsTeam.Spectator) {
+            if (theQueueManager.isPlayerActive(aPlayer)) {
+                theQueueManager.removePlayerFromQueues(aPlayer);
+            }
+            return HookResult.Continue;
+        }
+
+        if (myOldTeam != CsTeam.Spectator && myNewTeam != CsTeam.Spectator) {
+            return HookResult.Handled;
+        }
+
+        if (myOldTeam == CsTeam.Spectator && myNewTeam != CsTeam.Spectator) {
+            theQueueManager.addPlayerToQueuePlayers(aPlayer);
+            return HookResult.Handled;
+        }
+
+        return HookResult.Continue;
     }
 
     [GameEventHandler(HookMode.Pre)]
@@ -107,25 +137,8 @@ public partial class MakisRetake {
                 aPlayer.CommitSuicide(true, true);
             }
         }
-        var myPlayer = @event.Userid;
-        CsTeam myOldTeam = (CsTeam)@event.Oldteam;
-        CsTeam myNewTeam = (CsTeam)@event.Team;
+
         @event.Silent = true;
-
-        if (!myPlayer.isPlayerValid()) {
-            return HookResult.Continue;
-        }
-
-        if (myNewTeam == CsTeam.Spectator) {
-            if (theQueueManager.isPlayerActive(myPlayer)) {
-                theQueueManager.removePlayerFromQueues(myPlayer);
-            }
-            return HookResult.Continue;
-        }
-
-        if (myOldTeam == CsTeam.Spectator && myNewTeam != CsTeam.Spectator) {
-            theQueueManager.addPlayerToQueuePlayers(myPlayer);
-        }
 
         return HookResult.Continue;
     }

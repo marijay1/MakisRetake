@@ -5,7 +5,6 @@ using CounterStrikeSharp.API.Modules.Utils;
 using MakisRetake.Configs;
 using MakisRetake.Enums;
 using MakisRetake.Managers;
-using System.Drawing;
 using System.Text;
 
 namespace MakisRetake;
