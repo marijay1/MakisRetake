@@ -67,7 +67,7 @@ public class QueueManager {
             }
 
             foreach (var aPlayer in theQueuePlayers) {
-                aPlayer.PrintToChat("The game is currently full. Please wait for a spot to open up.");
+                aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.gamefull"]}");
             }
         }
     }
@@ -92,7 +92,7 @@ public class QueueManager {
             CCSPlayerController myRemovedPlayer = myNonVipActivePlayers[myRandomIndex];
             myNonVipActivePlayers.Remove(myRemovedPlayer);
             theQueuePlayers.Remove(myRemovedPlayer);
-            myRemovedPlayer.PrintToChat("You have been moved to Queue due to a VIP.");
+            myRemovedPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.movedtospec"]}");
         }
         theActivePlayers.Add(aVipPlayer);
     }

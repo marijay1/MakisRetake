@@ -50,18 +50,18 @@ public class GameManager {
 
         if (aWinningTeam != theLastWinningTeam) {
             if (theCurrentConsecutiveWins >= theWinsToBreakStreak) {
-                Server.PrintToChatAll($"The {aWinningTeam} have broken the {theLastWinningTeam}'s winstreak of {theCurrentConsecutiveWins}!");
+                Server.PrintToChatAll($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.breakwinstreak", aWinningTeam, theLastWinningTeam, theCurrentConsecutiveWins]}");
             }
             theCurrentConsecutiveWins = 0;
         }
 
         if (aWinningTeam == CsTeam.Terrorist) {
             if (theCurrentConsecutiveWins >= theRetakesConfig.theConsecutiveRoundsToScramble) {
-                Server.PrintToChatAll($"The Terrorist have won {theCurrentConsecutiveWins} rounds in a row! Teams are being scrambled.");
+                Server.PrintToChatAll($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.scramble", theCurrentConsecutiveWins]}");
                 scrambleTeams();
                 theCurrentConsecutiveWins = 0;
             } else if (theCurrentConsecutiveWins > (theRetakesConfig.theConsecutiveRoundsToScramble * theWinRatioToWarn)) {
-                Server.PrintToChatAll($"The Terrorist have won {theCurrentConsecutiveWins} rounds in a row! {theRetakesConfig.theConsecutiveRoundsToScramble - theCurrentConsecutiveWins} more rounds until scramble.");
+                Server.PrintToChatAll($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.scramblewarn", theCurrentConsecutiveWins, theRetakesConfig.theConsecutiveRoundsToScramble - theCurrentConsecutiveWins]}");
             }
         }
 
@@ -154,7 +154,6 @@ public class GameManager {
 
     //Code from https://github.com/B3none/cs2-retakes
     public void autoPlantBomb(CCSPlayerController aPlayer, Bombsite aBombsite) {
-        var myPlayerPawn = aPlayer.PlayerPawn;
         var myPlantedBomb = Utilities.CreateEntityByName<CPlantedC4>("planted_c4");
 
         if (!aPlayer.isPlayerPawnValid() || !aPlayer.isPlayerValid() || aPlayer.AbsOrigin == null

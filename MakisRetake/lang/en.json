@@ -1,0 +1,9 @@
+{
+  "mr.retakes.noplanter": "Oops! No planter. Skipping round.",
+  "mr.retakes.enoughplayers": "Enough players have joined. Starting game!",
+  "mr.retakes.gamefull": "The game is currently full! Please wait for a spot to open up.",
+  "mr.retakes.movedtospec": "You have been moved to spectator due to a VIP joining.",
+  "mr.retakes.breakwinstreak": "The {0} have broken the {1}'s winstreak of {2}!",
+  "mr.retakes.scramble": "The Terrorist have won {0} rounds in a row! Teams are being scrambled.",
+  "mr.retakes.scramblewarn": "The Terrorist have won {0} rounds in a row! {1} more rounds until scramble."
+}

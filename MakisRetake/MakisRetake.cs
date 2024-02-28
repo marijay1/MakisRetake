@@ -5,13 +5,14 @@ using CounterStrikeSharp.API.Modules.Utils;
 using MakisRetake.Configs;
 using MakisRetake.Enums;
 using MakisRetake.Managers;
+using System.Drawing;
 using System.Text;
 
 namespace MakisRetake;
 
-[MinimumApiVersion(172)]
+[MinimumApiVersion(176)]
 public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
-    private const string Version = "1.0.0";
+    private const string Version = "1.1.0";
 
     public override string ModuleName => "Maki's Retake";
     public override string ModuleVersion => Version;
@@ -19,7 +20,8 @@ public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
     public override string ModuleDescription => "Main Retake plugin for Maki's";
 
     public static readonly string LogPrefix = $"[Maki's Retakes {Version}] ";
-    public static readonly string MessagePrefix = $"[{ChatColors.LightPurple}Maki's Retakes{ChatColors.White}] ";
+    public static readonly string MessagePrefix = $"[{ChatColors.LightPurple}Maki's Retakes{ChatColors.White}]";
+    public static MakisRetake Plugin;
 
     private Bombsite theCurrentBombsite = Bombsite.A;
     private CCSPlayerController? thePlanter;
@@ -30,6 +32,7 @@ public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
     private MapConfig? theMapConfig;
 
     public MakisRetake() {
+        Plugin = this;
     }
 
     public void OnConfigParsed(MakisConfig aMakiConfig) {

@@ -50,7 +50,7 @@ public partial class MakisRetake {
         int randomIndex = random.Next(activeTerrorists.Count);
         if (randomIndex == 0) {
             foreach (CCSPlayerController aPlayer in Utilities.GetPlayers().Where(aPlayer => aPlayer.isPlayerPawnValid() && aPlayer.PawnIsAlive)) {
-                aPlayer.PrintToChat("No Planter. Skipping round.");
+                aPlayer.PrintToChat($"{MessagePrefix} {Localizer["mr.retakes.noplanter"]}");
                 aPlayer.CommitSuicide(true, true);
             }
         }
@@ -103,7 +103,7 @@ public partial class MakisRetake {
         if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod && Utilities.GetPlayers().Count >= 2) {
             Server.ExecuteCommand("mp_warmup_end");
             foreach (CCSPlayerController aPlayer in Utilities.GetPlayers().Where(aPlayer => aPlayer.isPlayerPawnValid() && aPlayer.PawnIsAlive)) {
-                aPlayer.PrintToChat("Enough players have joined. Starting game!");
+                aPlayer.PrintToChat($"{MessagePrefix} {Localizer["mr.retakes.enoughplayers"]}");
                 aPlayer.CommitSuicide(true, true);
             }
         }
