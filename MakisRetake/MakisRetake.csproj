@@ -11,4 +11,8 @@
     <PackageReference Include="CounterStrikeSharp.API" Version="1.0.176" />
   </ItemGroup>
 
+  <ItemGroup>
+	<None Update="lang\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

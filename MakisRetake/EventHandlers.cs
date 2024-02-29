@@ -38,7 +38,6 @@ public partial class MakisRetake {
         if (myGameRules.WarmupPeriod) {
             return HookResult.Continue;
         }
-        myGameRules.IsValveDS = true;
 
         theCurrentBombsite = (Bombsite)new Random().Next(0, 2);
 
