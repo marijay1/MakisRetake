@@ -19,11 +19,11 @@ This plugin was created for my own server, so I will not go out of my way to add
 
 - [ ] Edit mode for configuring map spawns
 
-- [ ] Translations
+- [x] Translations
 
 - [ ] Bombsite announcement image 
 
-- [ ] Bombsite announcement announcer
+- [x] Bombsite announcement announcer
 
 - [ ] Add better feedback to the player/admin
 
