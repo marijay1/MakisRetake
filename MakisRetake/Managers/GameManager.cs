@@ -28,11 +28,11 @@ public class GameManager {
         theRetakesConfig = aConfig.theRetakesConfig;
     }
 
-    public void ResetPlayerScores() {
+    public void resetPlayerScores() {
         thePlayerPoints = new Dictionary<CCSPlayerController, int>();
     }
 
-    public void AddScore(CCSPlayerController aPlayer, int aScore) {
+    public void addScore(CCSPlayerController aPlayer, int aScore) {
         if (!aPlayer.isPlayerValid()) {
             return;
         }
@@ -50,18 +50,18 @@ public class GameManager {
 
         if (aWinningTeam != theLastWinningTeam) {
             if (theCurrentConsecutiveWins >= theWinsToBreakStreak) {
-                Server.PrintToChatAll($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.breakwinstreak", aWinningTeam, theLastWinningTeam, theCurrentConsecutiveWins]}");
+                Server.PrintToChatAll($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.team.WinStreakOver", aWinningTeam, theLastWinningTeam, theCurrentConsecutiveWins]}");
             }
             theCurrentConsecutiveWins = 0;
         }
 
         if (aWinningTeam == CsTeam.Terrorist) {
             if (theCurrentConsecutiveWins >= theRetakesConfig.theConsecutiveRoundsToScramble) {
-                Server.PrintToChatAll($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.scramble", theCurrentConsecutiveWins]}");
+                Server.PrintToChatAll($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.team.Scramble", theCurrentConsecutiveWins]}");
                 scrambleTeams();
                 theCurrentConsecutiveWins = 0;
             } else if (theCurrentConsecutiveWins > (theRetakesConfig.theConsecutiveRoundsToScramble * theWinRatioToWarn)) {
-                Server.PrintToChatAll($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.scramblewarn", theCurrentConsecutiveWins, theRetakesConfig.theConsecutiveRoundsToScramble - theCurrentConsecutiveWins]}");
+                Server.PrintToChatAll($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.team.ScrambleWarning", theCurrentConsecutiveWins, theRetakesConfig.theConsecutiveRoundsToScramble - theCurrentConsecutiveWins]}");
             }
         }
 
@@ -169,7 +169,7 @@ public class GameManager {
         string myAnnouncer = myAnnouncers[new Random().Next(0, myAnnouncers.Count)];
 
         foreach (CCSPlayerController myPlayer in Utilities.GetPlayers()) {
-            myPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.bombsiteannouncement.chat", aBombsite.ToString(), myNumberOfCounterTerrorists, myNumberOfTerrorists]}");
+            myPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.bombsite.announcement.Chat", aBombsite.ToString(), myNumberOfCounterTerrorists, myNumberOfTerrorists]}");
             myPlayer.ExecuteClientCommand("snd_toolvolume .1");
             myPlayer.ExecuteClientCommand($"play sounds/vo/agents/{myAnnouncer}/loc_{aBombsite.ToString().ToLower()}_01");
         }

@@ -41,7 +41,7 @@ public partial class MakisRetake {
 
         theCurrentBombsite = (Bombsite)new Random().Next(0, 2);
 
-        theGameManager.ResetPlayerScores();
+        theGameManager.resetPlayerScores();
 
         Random random = new Random();
         List<CCSPlayerController> activeTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.Terrorist).ToList();
@@ -49,7 +49,7 @@ public partial class MakisRetake {
         int randomIndex = random.Next(activeTerrorists.Count);
         if (randomIndex == 0) {
             foreach (CCSPlayerController aPlayer in Utilities.GetPlayers().Where(aPlayer => aPlayer.isPlayerPawnValid() && aPlayer.PawnIsAlive)) {
-                aPlayer.PrintToChat($"{MessagePrefix} {Localizer["mr.retakes.noplanter"]}");
+                aPlayer.PrintToChat($"{MessagePrefix} {Localizer["mr.retakes.events.NoPlanter"]}");
                 aPlayer.CommitSuicide(true, true);
             }
         }
@@ -89,7 +89,7 @@ public partial class MakisRetake {
     public HookResult OnBombDefused(EventBombDefused @event, GameEventInfo anInfo) {
         CCSPlayerController myPlayer = @event.Userid;
 
-        theGameManager.AddScore(myPlayer, GameManager.ScoreForDefuse);
+        theGameManager.addScore(myPlayer, GameManager.ScoreForDefuse);
 
         return HookResult.Continue;
     }
@@ -133,7 +133,7 @@ public partial class MakisRetake {
         if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod && Utilities.GetPlayers().Count >= 2) {
             Server.ExecuteCommand("mp_warmup_end");
             foreach (CCSPlayerController aPlayer in Utilities.GetPlayers().Where(aPlayer => aPlayer.isPlayerPawnValid() && aPlayer.PawnIsAlive)) {
-                aPlayer.PrintToChat($"{MessagePrefix} {Localizer["mr.retakes.enoughplayers"]}");
+                aPlayer.PrintToChat($"{MessagePrefix} {Localizer["mr.retakes.events.EnoughPlayers"]}");
                 aPlayer.CommitSuicide(true, true);
             }
         }
@@ -158,11 +158,11 @@ public partial class MakisRetake {
         CCSPlayerController myAssister = @event.Assister;
 
         if (myAttacker.isPlayerPawnValid()) {
-            theGameManager.AddScore(myAttacker, GameManager.ScoreForKill);
+            theGameManager.addScore(myAttacker, GameManager.ScoreForKill);
         }
 
         if (myAssister.isPlayerValid()) {
-            theGameManager.AddScore(myAssister, GameManager.ScoreForAssist);
+            theGameManager.addScore(myAssister, GameManager.ScoreForAssist);
         }
 
         return HookResult.Continue;
@@ -173,7 +173,7 @@ public partial class MakisRetake {
         CCSPlayerController myMvp = @event.Userid;
 
         if (myMvp.isPlayerValid()) {
-            theGameManager.AddScore(myMvp, GameManager.ScoreForMvp);
+            theGameManager.addScore(myMvp, GameManager.ScoreForMvp);
         }
 
         return HookResult.Continue;

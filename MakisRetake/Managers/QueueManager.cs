@@ -67,7 +67,7 @@ public class QueueManager {
             }
 
             foreach (var aPlayer in theQueuePlayers) {
-                aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.gamefull"]}");
+                aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.GameFull"]}");
             }
         }
     }
@@ -92,7 +92,7 @@ public class QueueManager {
             CCSPlayerController myRemovedPlayer = myNonVipActivePlayers[myRandomIndex];
             myNonVipActivePlayers.Remove(myRemovedPlayer);
             theQueuePlayers.Remove(myRemovedPlayer);
-            myRemovedPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.movedtospec"]}");
+            myRemovedPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.MovedToSpectator"]}");
         }
         theActivePlayers.Add(aVipPlayer);
     }
