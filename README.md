@@ -55,5 +55,5 @@ A file in the **configs/MakisRetake** folder in the **counterstrikesharp** direc
 
 I used the below repos for inspiration:
  - [B3none/cs2-retakes](https://github.com/B3none/cs2-retakes)
- - [yonilerner/cs2-retakes-allocator](https://github.com/matiassingers/awesome-readme)
+ - [yonilerner/cs2-retakes-allocator](https://github.com/yonilerner/cs2-retakes-allocator)
 
