@@ -19,11 +19,11 @@ This plugin was created for my own server, so I will not go out of my way to add
 
 - [ ] Edit mode for configuring map spawns
 
-- [ ] Translations
+- [x] Translations
 
 - [ ] Bombsite announcement image 
 
-- [ ] Bombsite announcement announcer
+- [x] Bombsite announcement announcer
 
 - [ ] Add better feedback to the player/admin
 
@@ -55,5 +55,5 @@ A file in the **configs/MakisRetake** folder in the **counterstrikesharp** direc
 
 I used the below repos for inspiration:
  - [B3none/cs2-retakes](https://github.com/B3none/cs2-retakes)
- - [yonilerner/cs2-retakes-allocator](https://github.com/matiassingers/awesome-readme)
+ - [yonilerner/cs2-retakes-allocator](https://github.com/yonilerner/cs2-retakes-allocator)
 
