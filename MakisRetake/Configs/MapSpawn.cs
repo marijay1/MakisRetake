@@ -8,14 +8,14 @@ namespace MakisRetake.Configs;
 public class MapSpawn {
 
     [JsonConverter(typeof(VectorProvider))]
-    public Vector theVector { get; }
+    public Vector theVector { get; set; }
 
     [JsonConverter(typeof(QAngleProvider))]
-    public QAngle theQAngle { get; }
+    public QAngle theQAngle { get; set; }
 
-    public CsTeam theTeam { get; }
-    public Bombsite theBombsite { get; }
-    public bool theCanBePlanter { get; }
+    public CsTeam theTeam { get; set; }
+    public Bombsite theBombsite { get; set; }
+    public bool theCanBePlanter { get; set; }
 
     public MapSpawn() {
     }

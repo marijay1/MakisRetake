@@ -35,10 +35,10 @@ public class MapConfig {
         try {
             if (File.Exists(theMapSpawnPath)) {
                 string myJsonData = File.ReadAllText(theMapSpawnPath);
+
                 JsonSerializerOptions myOptions = new JsonSerializerOptions();
                 myOptions.Converters.Add(new VectorProvider());
                 myOptions.Converters.Add(new QAngleProvider());
-                myOptions.IncludeFields = true;
 
                 theMapSpawns = JsonSerializer.Deserialize<List<MapSpawn>>(myJsonData, myOptions);
 
@@ -60,7 +60,6 @@ public class MapConfig {
         JsonSerializerOptions myOptions = new JsonSerializerOptions();
         myOptions.Converters.Add(new VectorProvider());
         myOptions.Converters.Add(new QAngleProvider());
-        myOptions.IncludeFields = true;
         myOptions.WriteIndented = true;
 
         string myJsonString = JsonSerializer.Serialize(theMapSpawns, myOptions);
