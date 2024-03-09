@@ -21,8 +21,8 @@ public class MapSpawn {
     }
 
     public MapSpawn(Vector aVector, QAngle aQAngle, CsTeam aTeam, Bombsite aBombsite, bool aCanBePlanter) {
-        theVector = aVector;
-        theQAngle = aQAngle;
+        theVector = new Vector(aVector.X, aVector.Y, aVector.Z);
+        theQAngle = new QAngle(aQAngle.X, aQAngle.Y, aQAngle.Z);
         theTeam = aTeam;
         theBombsite = aBombsite;
         theCanBePlanter = aCanBePlanter;
