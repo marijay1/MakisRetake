@@ -39,24 +39,26 @@ public partial class MakisRetake {
             return HookResult.Continue;
         }
 
-        theCurrentBombsite = (Bombsite)new Random().Next(0, 2);
+        theCurrentBombsite = new Random().Next(0, 2) == 0 ? Bombsite.A : Bombsite.B;
 
         theGameManager.resetPlayerScores();
 
         Random random = new Random();
-        List<CCSPlayerController> activeTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.Terrorist).ToList();
+        List<CCSPlayerController> myActiveTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.Terrorist).ToList();
 
-        int randomIndex = random.Next(activeTerrorists.Count);
-        if (randomIndex == 0) {
+        if (myActiveTerrorists.Count == 0) {
             foreach (CCSPlayerController aPlayer in Utilities.GetPlayers().Where(aPlayer => aPlayer.isPlayerPawnValid() && aPlayer.PawnIsAlive)) {
                 aPlayer.PrintToChat($"{MessagePrefix} {Localizer["mr.retakes.events.NoPlanter"]}");
                 aPlayer.CommitSuicide(true, true);
             }
+            return HookResult.Continue;
         }
-        thePlanter = activeTerrorists[randomIndex];
+        int randomIndex = random.Next(myActiveTerrorists.Count);
+        thePlanter = myActiveTerrorists[randomIndex];
 
         theGameManager.announceBombsite(theCurrentBombsite);
         theGameManager.handleSpawns(theCurrentBombsite, theMapConfig, thePlanter);
+        theGameManager.announceBombsite(theCurrentBombsite);
 
         return HookResult.Continue;
     }

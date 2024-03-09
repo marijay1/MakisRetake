@@ -131,7 +131,9 @@ public class GameManager {
     }
 
     public void handleSpawns(Bombsite aBombsite, MapConfig aMapConfig, CCSPlayerController aPlanter) {
-        List<MapSpawn> mySpawns = aMapConfig.getMapSpawns().Where(aSpawn => aSpawn.theBombsite == aBombsite).ToList();
+        List<MapSpawn> mySpawns = aMapConfig.getMapSpawns()
+            .Where(aSpawn => aSpawn.theBombsite.Equals(aBombsite)).ToList();
+
         Random myRandom = new Random();
 
         if (mySpawns.Count == 0) {
@@ -139,15 +141,30 @@ public class GameManager {
             return;
         }
 
-        foreach (var myPlayer in theQueueManager.getActivePlayers()) {
-            List<MapSpawn> myFilteredSpawns = mySpawns.Where(aSpawn => !aSpawn.theCanBePlanter && aSpawn.theTeam == myPlayer.Team).ToList();
-            MapSpawn mySpawn = myPlayer == aPlanter ? mySpawns.FirstOrDefault(aSpawn => aSpawn.theCanBePlanter) : myFilteredSpawns.FirstOrDefault();
+        foreach (CCSPlayerController myPlayer in theQueueManager.getActivePlayers()) {
+            CsTeam myTeam = myPlayer.Team;
+            bool myIsPlanter = myPlayer.Equals(aPlanter);
 
-            if (mySpawn != null) {
-                myPlayer.PlayerPawn.Value!.Teleport(mySpawn.theVector, mySpawn.theQAngle, new Vector());
-                mySpawns.Remove(mySpawn);
+            List<MapSpawn> myFilteredSpawns = new List<MapSpawn>();
+
+            foreach (MapSpawn mySpawn in mySpawns) {
+                if (mySpawn.theTeam != myTeam) {
+                    continue;
+                }
+                if (mySpawn.theCanBePlanter != myIsPlanter) {
+                    continue;
+                }
+                myFilteredSpawns.Add(mySpawn);
+            }
+
+            if (myFilteredSpawns.Count > 0) {
+                int randomIndex = myRandom.Next(0, myFilteredSpawns.Count);
+                MapSpawn myFinalSpawn = myFilteredSpawns[randomIndex];
+
+                myPlayer.PlayerPawn.Value!.Teleport(myFinalSpawn.theVector, myFinalSpawn.theQAngle, new Vector());
+                mySpawns.Remove(myFinalSpawn);
             } else {
-                Console.WriteLine(myPlayer == aPlanter ? "No planter spawns!" : "No non-planter spawns!");
+                Console.WriteLine(myPlayer.Equals(aPlanter) ? "No planter spawns!" : "No non-planter spawns!");
             }
         }
     }

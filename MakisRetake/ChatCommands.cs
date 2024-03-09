@@ -19,6 +19,8 @@ public partial class MakisRetake {
             return;
         }
 
+        CCSPlayerPawn myPlayerPawn = aPlayer.PlayerPawn.Value;
+
         if (aCommandInfo.ArgCount != 4) {
             aCommandInfo.ReplyToCommand("!addspawn [T/CT] [A/B] [Y/N (planter spawn)]");
             return;
@@ -33,14 +35,12 @@ public partial class MakisRetake {
             return;
         }
 
-        bool myPlanterSpawn = myPlanterSpawnString == "Y";
+        bool myIsPlanterSpawn = myPlanterSpawnString == "Y";
 
-        MapSpawn myMapSpawn = new MapSpawn(aPlayer.PlayerPawn.Value!.AbsOrigin!, aPlayer.PlayerPawn.Value!.AbsRotation!,
+        theMapConfig.addSpawn(new MapSpawn(myPlayerPawn.AbsOrigin, myPlayerPawn.AbsRotation,
                                             myTeamString == "T" ? CsTeam.Terrorist : CsTeam.CounterTerrorist,
                                             myBombsiteString == "A" ? Bombsite.A : Bombsite.B,
-                                            myPlanterSpawn);
-
-        theMapConfig.addSpawn(myMapSpawn);
+                                            myIsPlanterSpawn));
     }
 
     [ConsoleCommand("css_removespawn", "Removes the spawn closest to you.")]
