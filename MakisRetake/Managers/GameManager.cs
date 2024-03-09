@@ -170,8 +170,8 @@ public class GameManager {
 
         foreach (CCSPlayerController myPlayer in Utilities.GetPlayers()) {
             myPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.bombsite.announcement.Chat", aBombsite.ToString(), myNumberOfCounterTerrorists, myNumberOfTerrorists]}");
-            myPlayer.ExecuteClientCommand("snd_toolvolume .1");
-            myPlayer.ExecuteClientCommand($"play sounds/vo/agents/{myAnnouncer}/loc_{aBombsite.ToString().ToLower()}_01");
+            //myPlayer.ExecuteClientCommand("snd_toolvolume .1");
+            //myPlayer.ExecuteClientCommand($"play sounds/vo/agents/{myAnnouncer}/loc_{aBombsite.ToString().ToLower()}_01");
         }
     }
 
@@ -179,15 +179,17 @@ public class GameManager {
     public void autoPlantBomb(CCSPlayerController aPlayer, Bombsite aBombsite) {
         var myPlantedBomb = Utilities.CreateEntityByName<CPlantedC4>("planted_c4");
 
-        if (!aPlayer.isPlayerPawnValid() || !aPlayer.isPlayerValid() || aPlayer.AbsOrigin == null
+        CCSPlayerPawn myPlayerPawn = aPlayer.PlayerPawn.Value;
+
+        if (!aPlayer.isPlayerPawnValid() || !aPlayer.isPlayerValid() || myPlayerPawn.AbsOrigin == null
             || myPlantedBomb == null || myPlantedBomb.AbsOrigin == null) {
             //restart round?
             return;
         }
 
-        myPlantedBomb.AbsOrigin.X = aPlayer.AbsOrigin.X;
-        myPlantedBomb.AbsOrigin.Y = aPlayer.AbsOrigin.Y;
-        myPlantedBomb.AbsOrigin.Z = aPlayer.AbsOrigin.Z;
+        myPlantedBomb.AbsOrigin.X = myPlayerPawn.AbsOrigin.X;
+        myPlantedBomb.AbsOrigin.Y = myPlayerPawn.AbsOrigin.Y;
+        myPlantedBomb.AbsOrigin.Z = myPlayerPawn.AbsOrigin.Z;
         myPlantedBomb.HasExploded = false;
 
         myPlantedBomb.BombSite = (int)aBombsite;
