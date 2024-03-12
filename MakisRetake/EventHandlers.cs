@@ -7,7 +7,6 @@ using CSPlus.Base.Entities;
 using MakisRetake.Configs;
 using MakisRetake.Enums;
 using MakisRetake.Managers;
-using Microsoft.Extensions.Logging;
 
 namespace MakisRetake;
 
@@ -16,6 +15,7 @@ public partial class MakisRetake {
     private void OnMapStart(string aMapName) {
         executeRetakesConfiguration();
         theMapConfig = new MapConfig(ModuleDirectory, aMapName);
+        theGameManager.resetGameManager();
     }
 
     [GameEventHandler]
@@ -26,12 +26,7 @@ public partial class MakisRetake {
             return HookResult.Continue;
         }
 
-        if (!Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod) {
-            myPlayer.setTeam(CsTeam.Spectator);
-        } else {
-            myPlayer.setTeam(CsTeam.CounterTerrorist);
-        }
-
+        myPlayer.setTeam(CsTeam.Spectator);
         theQueueManager.addPlayerToQueuePlayers(myPlayer);
 
         return HookResult.Continue;
@@ -47,6 +42,7 @@ public partial class MakisRetake {
             Server.PrintToChatAll($"{MessagePrefix} {Localizer["mr.retakes.events.WarmupStart"]}");
             Server.ExecuteCommand("mp_warmup_start");
             theQueueManager.getActivePlayers().ForEach(aPlayer => { theQueueManager.removePlayerFromQueues(aPlayer); theQueueManager.addPlayerToQueuePlayers(aPlayer); });
+            theGameManager.resetGameManager();
             return HookResult.Continue;
         }
 
@@ -123,6 +119,7 @@ public partial class MakisRetake {
             theQueueManager.getQueuePlayers().Where(aPlayer => aPlayer.isPlayerConnected()).Count() >= 2) {
             if (myNewTeam == CsTeam.Terrorist || myNewTeam == CsTeam.CounterTerrorist) {
                 Server.ExecuteCommand("mp_warmup_end");
+
                 Server.PrintToChatAll($"{MessagePrefix} {Localizer["mr.retakes.events.WarmupEnd"]}");
                 theGameManager.scrambleTeams();
             }
@@ -151,7 +148,6 @@ public partial class MakisRetake {
 
         if (theQueueManager.getQueuePlayers().Contains(aPlayer)) {
             if (myNewTeam == CsTeam.Terrorist || myNewTeam == CsTeam.CounterTerrorist) {
-                aPlayer.setTeam(CsTeam.Spectator);
                 aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.AlreadyInQueue"]}");
                 return HookResult.Handled;
             }

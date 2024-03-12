@@ -28,6 +28,12 @@ public class GameManager {
         theRetakesConfig = aConfig.theRetakesConfig;
     }
 
+    public void resetGameManager() {
+        theCurrentConsecutiveWins = 0;
+        resetPlayerScores();
+        theLastWinningTeam = CsTeam.None;
+    }
+
     public void resetPlayerScores() {
         thePlayerPoints = new Dictionary<CCSPlayerController, int>();
     }
