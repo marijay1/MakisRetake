@@ -39,7 +39,12 @@ public partial class MakisRetake {
             return HookResult.Continue;
         }
 
-        theCurrentBombsite = new Random().Next(0, 2) == 0 ? Bombsite.A : Bombsite.B;
+        if (theQueueManager.getActivePlayers().Count < 2) {
+            Server.PrintToChatAll($"{MessagePrefix} {Localizer["mr.retakes.events.WarmupStart"]}");
+            Server.ExecuteCommand("mp_warmup_start");
+            theQueueManager.getActivePlayers().ForEach(aPlayer => { theQueueManager.removePlayerFromQueues(aPlayer); theQueueManager.addPlayerToQueuePlayers(aPlayer); });
+            return HookResult.Continue;
+        }
 
         theGameManager.resetPlayerScores();
 
@@ -97,7 +102,19 @@ public partial class MakisRetake {
     }
 
     public HookResult OnCommandJoinTeam(CCSPlayerController? aPlayer, CommandInfo anInfo) {
-        if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod) {
+        if (aPlayer == null || anInfo.ArgCount < 2 || !Enum.TryParse<CsTeam>(anInfo.GetArg(1), out CsTeam myNewTeam)) {
+            return HookResult.Handled;
+        }
+
+        CsTeam myOldTeam = aPlayer.Team;
+
+        if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod &&
+            theQueueManager.getQueuePlayers().Where(aPlayer => aPlayer.isPlayerConnected()).Count() >= 2) {
+            if (myNewTeam == CsTeam.Terrorist || myNewTeam == CsTeam.CounterTerrorist) {
+                Server.ExecuteCommand("mp_warmup_end");
+                Server.PrintToChatAll($"{MessagePrefix} {Localizer["mr.retakes.events.WarmupEnd"]}");
+                theGameManager.scrambleTeams();
+            }
             return HookResult.Continue;
         }
 
@@ -114,16 +131,23 @@ public partial class MakisRetake {
         if (myNewTeam == CsTeam.Spectator) {
             if (theQueueManager.isPlayerActive(aPlayer)) {
                 theQueueManager.removePlayerFromQueues(aPlayer);
+                aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.JoinSpectator"]}");
             }
             return HookResult.Continue;
         }
 
-        if (myOldTeam != CsTeam.Spectator && myNewTeam != CsTeam.Spectator) {
+        if (!theQueueManager.getQueuePlayers().Contains(aPlayer) && !theQueueManager.getActivePlayers().Contains(aPlayer)) {
+            if (myNewTeam == CsTeam.Terrorist || myNewTeam == CsTeam.CounterTerrorist) {
+                theQueueManager.addPlayerToQueuePlayers(aPlayer);
+                aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.Joined"]}");
+            }
             return HookResult.Handled;
         }
 
-        if (myOldTeam == CsTeam.Spectator && myNewTeam != CsTeam.Spectator) {
-            theQueueManager.addPlayerToQueuePlayers(aPlayer);
+        if (theQueueManager.getQueuePlayers().Contains(aPlayer)) {
+            if (myNewTeam == CsTeam.Terrorist || myNewTeam == CsTeam.CounterTerrorist) {
+                aPlayer.setTeam(CsTeam.Spectator);
+                aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.AlreadyInQueue"]}");
             return HookResult.Handled;
         }
 

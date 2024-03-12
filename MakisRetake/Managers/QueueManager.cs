@@ -27,6 +27,7 @@ public class QueueManager {
     }
 
     public void addPlayerToQueuePlayers(CCSPlayerController aPlayer) {
+        aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.Joined"]}");
         theQueuePlayers.Add(aPlayer);
     }
 

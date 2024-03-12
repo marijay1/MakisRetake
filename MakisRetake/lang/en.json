@@ -1,7 +1,11 @@
 {
   "mr.retakes.events.NoPlanter": "Oops! No planter. Skipping round.",
-  "mr.retakes.events.EnoughPlayers": "Enough players have joined. Starting game!",
+  "mr.retakes.events.WarmupStart": "Not enough players, switching to {lightpurple}Warmup{white}.",
+  "mr.retakes.events.WarmupEnd": "Enough players have joined. Starting game!",
 
+  "mr.retakes.queue.Joined": "You have joined the {lightpurple}queue{white}.",
+  "mr.retakes.queue.AlreadyInQueue": "You are already in the {lightpurple}queue{white}!",
+  "mr.retakes.queue.JoinSpectator": "You have joined {lightpurple}Spectator{white}. Join a team to join the {lightpurple}queue{white}.",
   "mr.retakes.queue.GameFull": "The game is currently full! Please wait for a spot to open up.",
   "mr.retakes.queue.MovedToSpectator": "You have been moved to spectator due to a {gold}VIP {white}joining.",
 
