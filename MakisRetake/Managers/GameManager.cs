@@ -44,18 +44,14 @@ public class GameManager {
 
     public void handleRoundWin(CsTeam aWinningTeam) {
         theCurrentConsecutiveWins++;
-        if (theLastWinningTeam != CsTeam.None) {
-            return;
-        }
-
-        if (aWinningTeam != theLastWinningTeam) {
+        if (!aWinningTeam.Equals(theLastWinningTeam) && !theLastWinningTeam.Equals(CsTeam.None)) {
             if (theCurrentConsecutiveWins >= theWinsToBreakStreak) {
                 Server.PrintToChatAll($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.team.WinStreakOver", aWinningTeam, theLastWinningTeam, theCurrentConsecutiveWins]}");
             }
             theCurrentConsecutiveWins = 0;
         }
 
-        if (aWinningTeam == CsTeam.Terrorist) {
+        if (aWinningTeam.Equals(CsTeam.Terrorist)) {
             if (theCurrentConsecutiveWins >= theRetakesConfig.theConsecutiveRoundsToScramble) {
                 Server.PrintToChatAll($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.team.Scramble", theCurrentConsecutiveWins]}");
                 scrambleTeams();
@@ -65,69 +61,77 @@ public class GameManager {
             }
         }
 
-        if (aWinningTeam == CsTeam.CounterTerrorist) {
+        if (aWinningTeam.Equals(CsTeam.CounterTerrorist)) {
             balanceTeams();
         }
+
+        theLastWinningTeam = aWinningTeam;
     }
 
-    private void scrambleTeams() {
+    public void scrambleTeams() {
+        theQueueManager.updateQueue();
         List<CCSPlayerController> myActivePlayers = theQueueManager.getActivePlayers();
 
-        if (myActivePlayers.Count == 2) {
-            switchTeams(myActivePlayers);
+        Random myRandom = new Random();
+
+        if (myActivePlayers.Count > 2) {
+            for (int i = myActivePlayers.Count - 1; i > 0; i--) {
+                int j = myRandom.Next(i + 1);
+                CCSPlayerController myTempPlayer = myActivePlayers[i];
+                myActivePlayers[i] = myActivePlayers[j];
+                myActivePlayers[j] = myTempPlayer;
+            }
         }
 
-        Random random = new Random();
+        int numTerrorists = theQueueManager.getTargetTerroristNum();
+        int numCounterTerrorists = myActivePlayers.Count - numTerrorists;
 
-        for (int i = myActivePlayers.Count - 1; i > 0; i--) {
-            int j = random.Next(i + 1);
-            CCSPlayerController myTempPlayer = myActivePlayers[i];
-            myActivePlayers[i] = myActivePlayers[j];
-            myActivePlayers[j] = myTempPlayer;
-        }
-
-        List<CCSPlayerController> myNewTerrorists = myActivePlayers.Take(myActivePlayers.Count - theQueueManager.getTargetCounterTerroristNum()).ToList();
-        List<CCSPlayerController> myNewCounterTerrorists = myActivePlayers.Except(myNewTerrorists).ToList();
+        List<CCSPlayerController> myNewTerrorists = myActivePlayers.Take(numTerrorists).ToList();
+        List<CCSPlayerController> myNewCounterTerrorists = myActivePlayers.Skip(numTerrorists).Take(numCounterTerrorists).ToList();
 
         setTeams(myNewTerrorists, myNewCounterTerrorists);
     }
 
     private void balanceTeams() {
         theQueueManager.updateQueue();
+        Random myRandom = new Random();
+
         List<CCSPlayerController> myActivePlayers = theQueueManager.getActivePlayers();
-        List<CCSPlayerController> myOldTerrorists = myActivePlayers.Where(aPlayer => aPlayer.Team == CsTeam.Terrorist).ToList();
-        List<CCSPlayerController> myOldCounterTerrorists = myActivePlayers.Where(aPlayer => aPlayer.Team == CsTeam.CounterTerrorist).ToList();
+        List<CCSPlayerController> myOldTerrorists = myActivePlayers.Where(aPlayer => aPlayer.TeamNum == (int)CsTeam.Terrorist).ToList();
+        List<CCSPlayerController> myOldCounterTerrorists = myActivePlayers.Where(aPlayer => aPlayer.TeamNum == (int)CsTeam.CounterTerrorist).ToList();
 
         List<CCSPlayerController> myNewTerrorists = new();
         List<CCSPlayerController> myNewCounterTerrorists = new();
 
         if (myActivePlayers.Count == 2) {
-            switchTeams(myActivePlayers);
+            setTeams(myOldCounterTerrorists, myOldTerrorists);
+            return;
         }
 
-        CCSPlayerController myBestTerrorist = myOldTerrorists.MaxBy(p => thePlayerPoints[p])!;
-        myNewTerrorists.Add(myBestTerrorist);
+        CCSPlayerController myBestTerrorist = myOldTerrorists.OrderByDescending(aPlayer => thePlayerPoints.GetValueOrDefault(aPlayer, 0)).FirstOrDefault();
+
         myOldTerrorists.Remove(myBestTerrorist);
-        while (!theQueueManager.getTargetTerroristNum().Equals(myNewTerrorists.Count)) {
-            CCSPlayerController myBestCounterTerrorist = myOldCounterTerrorists.MaxBy(aPlayer => thePlayerPoints[aPlayer])!;
+        myNewTerrorists.Add(myBestTerrorist);
+
+        while (myNewTerrorists.Count < theQueueManager.getTargetTerroristNum()) {
+            CCSPlayerController myBestCounterTerrorist = myOldCounterTerrorists.OrderByDescending(aPlayer => thePlayerPoints.GetValueOrDefault(aPlayer, 0)).FirstOrDefault();
             myNewTerrorists.Add(myBestCounterTerrorist);
             myOldCounterTerrorists.Remove(myBestCounterTerrorist);
         }
 
-        myOldCounterTerrorists.ForEach(aPlayer => myNewCounterTerrorists.Add(aPlayer));
-        myOldTerrorists.ForEach(aPlayer => myNewCounterTerrorists.Add(aPlayer));
+        myNewCounterTerrorists.AddRange(myOldCounterTerrorists);
+        myNewCounterTerrorists.AddRange(myOldTerrorists);
 
         setTeams(myNewTerrorists, myNewCounterTerrorists);
     }
 
     private void setTeams(List<CCSPlayerController> aTerrorists, List<CCSPlayerController> aCounterTerrorists) {
-        aTerrorists.Where(aPlayer => aPlayer.isPlayerValid()).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.Terrorist));
-        aCounterTerrorists.Where(aPlayer => aPlayer.isPlayerValid()).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.CounterTerrorist));
-    }
-
-    private void switchTeams(List<CCSPlayerController> anActivePlayers) {
-        anActivePlayers.Where(aPlayer => aPlayer.isPlayerValid() && aPlayer.Team == CsTeam.Terrorist).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.CounterTerrorist));
-        anActivePlayers.Where(aPlayer => aPlayer.isPlayerValid() && aPlayer.Team == CsTeam.CounterTerrorist).ToList().ForEach(aPlayer => aPlayer.SwitchTeam(CsTeam.Terrorist));
+        aTerrorists.Where(aPlayer => aPlayer.isPlayerValid()).ToList().ForEach(aPlayer => {
+            aPlayer.setTeam(CsTeam.Terrorist);
+        });
+        aCounterTerrorists.Where(aPlayer => aPlayer.isPlayerValid()).ToList().ForEach(aPlayer => {
+            aPlayer.setTeam(CsTeam.CounterTerrorist);
+        });
     }
 
     public void handleSpawns(Bombsite aBombsite, MapConfig aMapConfig, CCSPlayerController aPlanter) {
@@ -169,6 +173,10 @@ public class GameManager {
         }
     }
 
+    public int getNumOfPlayersOnTeam(CsTeam aTeam) {
+        return Utilities.GetPlayers().Where(aPlayer => aPlayer.isPlayerValid() && aPlayer.isPlayerConnected() && aPlayer.Team.Equals(aTeam)).Count();
+    }
+
     public void announceBombsite(Bombsite aBombsite) {
         List<string> myAnnouncers = new List<string> {
                                     "balkan_epic",
@@ -180,8 +188,8 @@ public class GameManager {
                                     "swat_fem"
                                     };
 
-        int myNumberOfCounterTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.CounterTerrorist).ToList().Count;
-        int myNumberOfTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.Terrorist).ToList().Count;
+        int myNumberOfCounterTerrorists = getNumOfPlayersOnTeam(CsTeam.CounterTerrorist);
+        int myNumberOfTerrorists = getNumOfPlayersOnTeam(CsTeam.Terrorist);
 
         string myAnnouncer = myAnnouncers[new Random().Next(0, myAnnouncers.Count)];
 

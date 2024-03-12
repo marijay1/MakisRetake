@@ -12,23 +12,28 @@ public class QueueManager {
 
     private RetakesConfig theRetakesConfig;
 
-    public QueueManager(MakisConfig aConfig) {
-        theRetakesConfig = aConfig.theRetakesConfig;
+    public QueueManager(RetakesConfig aConfig) {
+        theRetakesConfig = aConfig;
     }
 
     public int getTargetTerroristNum() {
-        var myTerroristNum = (int)Math.Round(theRetakesConfig.theTerroristRatio * theActivePlayers.Count);
+        int myTerroristNum = (int)Math.Round(theRetakesConfig.theTerroristRatio * theActivePlayers.Count);
 
         return myTerroristNum > 0 ? myTerroristNum : 1;
     }
 
     public int getTargetCounterTerroristNum() {
-        return theActivePlayers.Count - getTargetTerroristNum();
+        int myCounterTerroristNum = theActivePlayers.Count - getTargetTerroristNum();
+        return myCounterTerroristNum > 0 ? myCounterTerroristNum : 1;
     }
 
     public void addPlayerToQueuePlayers(CCSPlayerController aPlayer) {
         aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.Joined"]}");
         theQueuePlayers.Add(aPlayer);
+    }
+
+    public List<CCSPlayerController> getQueuePlayers() {
+        return theQueuePlayers;
     }
 
     public List<CCSPlayerController> getActivePlayers() {
@@ -62,9 +67,10 @@ public class QueueManager {
                     theQueuePlayers.Remove(aPlayer);
                     if (aPlayer.isPlayerValid()) {
                         theActivePlayers.Add(aPlayer);
-                        aPlayer.SwitchTeam(CsTeam.CounterTerrorist);
+                        aPlayer.setTeam(CsTeam.CounterTerrorist);
                     }
                 }
+                return;
             }
 
             foreach (var aPlayer in theQueuePlayers) {

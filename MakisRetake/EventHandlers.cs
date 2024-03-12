@@ -7,6 +7,7 @@ using CSPlus.Base.Entities;
 using MakisRetake.Configs;
 using MakisRetake.Enums;
 using MakisRetake.Managers;
+using Microsoft.Extensions.Logging;
 
 namespace MakisRetake;
 
@@ -25,7 +26,11 @@ public partial class MakisRetake {
             return HookResult.Continue;
         }
 
-        myPlayer.SwitchTeam(CsTeam.Spectator);
+        if (!Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod) {
+            myPlayer.setTeam(CsTeam.Spectator);
+        } else {
+            myPlayer.setTeam(CsTeam.CounterTerrorist);
+        }
 
         theQueueManager.addPlayerToQueuePlayers(myPlayer);
 
@@ -34,8 +39,7 @@ public partial class MakisRetake {
 
     [GameEventHandler]
     public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo anInfo) {
-        CCSGameRules myGameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!;
-        if (myGameRules.WarmupPeriod) {
+        if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod) {
             return HookResult.Continue;
         }
 
@@ -46,22 +50,29 @@ public partial class MakisRetake {
             return HookResult.Continue;
         }
 
-        theGameManager.resetPlayerScores();
+        List<CCSPlayerController> myActiveTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.TeamNum.Equals((int)CsTeam.Terrorist)).ToList();
 
-        Random random = new Random();
-        List<CCSPlayerController> myActiveTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.Team == CsTeam.Terrorist).ToList();
-
-        if (myActiveTerrorists.Count == 0) {
-            foreach (CCSPlayerController aPlayer in Utilities.GetPlayers().Where(aPlayer => aPlayer.isPlayerPawnValid() && aPlayer.PawnIsAlive)) {
-                aPlayer.PrintToChat($"{MessagePrefix} {Localizer["mr.retakes.events.NoPlanter"]}");
-                aPlayer.CommitSuicide(true, true);
+        if (myActiveTerrorists.Count == 0 || theGameManager.getNumOfPlayersOnTeam(CsTeam.CounterTerrorist) == 0) {
+            theGameManager.scrambleTeams();
+            if (myActiveTerrorists.Count == 0) {
+                foreach (CCSPlayerController aPlayer in Utilities.GetPlayers().Where(aPlayer => aPlayer.isPlayerPawnValid() && aPlayer.PawnIsAlive)) {
+                    aPlayer.PrintToChat($"{MessagePrefix} {Localizer["mr.retakes.events.NoPlanter"]}");
+                    aPlayer.CommitSuicide(true, true);
+                }
             }
+
             return HookResult.Continue;
         }
-        int randomIndex = random.Next(myActiveTerrorists.Count);
+
+        Random myRandom = new Random();
+
+        theCurrentBombsite = myRandom.Next(0, 2) == 0 ? Bombsite.A : Bombsite.B;
+
+        theGameManager.resetPlayerScores();
+
+        int randomIndex = myRandom.Next(myActiveTerrorists.Count);
         thePlanter = myActiveTerrorists[randomIndex];
 
-        theGameManager.announceBombsite(theCurrentBombsite);
         theGameManager.handleSpawns(theCurrentBombsite, theMapConfig, thePlanter);
         theGameManager.announceBombsite(theCurrentBombsite);
 
@@ -122,12 +133,6 @@ public partial class MakisRetake {
             return HookResult.Handled;
         }
 
-        if (anInfo.ArgCount < 2 || !Enum.TryParse<CsTeam>(anInfo.GetArg(1), out CsTeam myNewTeam)) {
-            return HookResult.Handled;
-        }
-
-        CsTeam myOldTeam = aPlayer.Team;
-
         if (myNewTeam == CsTeam.Spectator) {
             if (theQueueManager.isPlayerActive(aPlayer)) {
                 theQueueManager.removePlayerFromQueues(aPlayer);
@@ -148,7 +153,11 @@ public partial class MakisRetake {
             if (myNewTeam == CsTeam.Terrorist || myNewTeam == CsTeam.CounterTerrorist) {
                 aPlayer.setTeam(CsTeam.Spectator);
                 aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.AlreadyInQueue"]}");
-            return HookResult.Handled;
+                return HookResult.Handled;
+            }
+
+            theQueueManager.removePlayerFromQueues(aPlayer);
+            return HookResult.Continue;
         }
 
         return HookResult.Continue;
@@ -156,14 +165,6 @@ public partial class MakisRetake {
 
     [GameEventHandler(HookMode.Pre)]
     public HookResult OnPlayerTeam(EventPlayerTeam @event, GameEventInfo anInfo) {
-        if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod && Utilities.GetPlayers().Count >= 2) {
-            Server.ExecuteCommand("mp_warmup_end");
-            foreach (CCSPlayerController aPlayer in Utilities.GetPlayers().Where(aPlayer => aPlayer.isPlayerPawnValid() && aPlayer.PawnIsAlive)) {
-                aPlayer.PrintToChat($"{MessagePrefix} {Localizer["mr.retakes.events.EnoughPlayers"]}");
-                aPlayer.CommitSuicide(true, true);
-            }
-        }
-
         @event.Silent = true;
 
         return HookResult.Continue;

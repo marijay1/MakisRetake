@@ -42,7 +42,7 @@ public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
         AddCommandListener("jointeam", OnCommandJoinTeam, HookMode.Pre);
 
-        theQueueManager = new QueueManager(Config);
+        theQueueManager = new QueueManager(Config.theRetakesConfig);
         theGameManager = new GameManager(theQueueManager, Config);
 
         if (theGameManager == null) {
