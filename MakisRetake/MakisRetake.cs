@@ -9,9 +9,9 @@ using System.Text;
 
 namespace MakisRetake;
 
-[MinimumApiVersion(178)]
+[MinimumApiVersion(194)]
 public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
-    private const string Version = "1.1.3";
+    private const string Version = "1.2.0";
 
     public override string ModuleName => "Maki's Retake";
     public override string ModuleVersion => Version;
