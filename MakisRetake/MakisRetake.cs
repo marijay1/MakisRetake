@@ -102,6 +102,8 @@ public partial class MakisRetake : BasePlugin, IPluginConfig<MakisConfig> {
             mp_death_drop_defuser 1
             mp_death_drop_grenade 1
             mp_warmuptime 300
+            mp_buytime 90
+            mp_buy_anywhere 1
 
             echo [Maki's Retakes] Config loaded!
         ";

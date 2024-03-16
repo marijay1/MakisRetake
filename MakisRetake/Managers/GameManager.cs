@@ -80,13 +80,15 @@ public class GameManager {
 
         Random myRandom = new Random();
 
-        if (myActivePlayers.Count > 2) {
-            for (int i = myActivePlayers.Count - 1; i > 0; i--) {
-                int j = myRandom.Next(i + 1);
-                CCSPlayerController myTempPlayer = myActivePlayers[i];
-                myActivePlayers[i] = myActivePlayers[j];
-                myActivePlayers[j] = myTempPlayer;
-            }
+        if (myActivePlayers.Count == 2) {
+            setTeams(myActivePlayers.Where(aPlayer => aPlayer.TeamNum == (int)CsTeam.CounterTerrorist).ToList(), myActivePlayers.Where(aPlayer => aPlayer.TeamNum == (int)CsTeam.Terrorist).ToList());
+        }
+
+        for (int i = myActivePlayers.Count - 1; i > 0; i--) {
+            int j = myRandom.Next(i + 1);
+            CCSPlayerController myTempPlayer = myActivePlayers[i];
+            myActivePlayers[i] = myActivePlayers[j];
+            myActivePlayers[j] = myTempPlayer;
         }
 
         int numTerrorists = theQueueManager.getTargetTerroristNum();

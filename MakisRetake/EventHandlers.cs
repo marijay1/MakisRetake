@@ -26,7 +26,6 @@ public partial class MakisRetake {
             return HookResult.Continue;
         }
 
-        myPlayer.setTeam(CsTeam.Spectator);
         theQueueManager.addPlayerToQueuePlayers(myPlayer);
 
         return HookResult.Continue;
@@ -38,15 +37,17 @@ public partial class MakisRetake {
             return HookResult.Continue;
         }
 
-        if (theQueueManager.getActivePlayers().Count < 2) {
+        List<CCSPlayerController> myActivePlayers = theQueueManager.getActivePlayers();
+
+        if (myActivePlayers.Count < 2) {
             Server.PrintToChatAll($"{MessagePrefix} {Localizer["mr.retakes.events.WarmupStart"]}");
             Server.ExecuteCommand("mp_warmup_start");
-            theQueueManager.getActivePlayers().ForEach(aPlayer => { theQueueManager.removePlayerFromQueues(aPlayer); theQueueManager.addPlayerToQueuePlayers(aPlayer); });
+            myActivePlayers.ForEach(aPlayer => { theQueueManager.removePlayerFromQueues(aPlayer); theQueueManager.addPlayerToQueuePlayers(aPlayer); });
             theGameManager.resetGameManager();
             return HookResult.Continue;
         }
 
-        List<CCSPlayerController> myActiveTerrorists = theQueueManager.getActivePlayers().Where(aPlayer => aPlayer.TeamNum.Equals((int)CsTeam.Terrorist)).ToList();
+        List<CCSPlayerController> myActiveTerrorists = myActivePlayers.Where(aPlayer => aPlayer.TeamNum.Equals((int)CsTeam.Terrorist)).ToList();
 
         if (myActiveTerrorists.Count == 0 || theGameManager.getNumOfPlayersOnTeam(CsTeam.CounterTerrorist) == 0) {
             theGameManager.scrambleTeams();
@@ -113,50 +114,61 @@ public partial class MakisRetake {
             return HookResult.Handled;
         }
 
-        CsTeam myOldTeam = aPlayer.Team;
-
-        if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod &&
-            theQueueManager.getQueuePlayers().Where(aPlayer => aPlayer.isPlayerConnected()).Count() >= 2) {
-            if (myNewTeam == CsTeam.Terrorist || myNewTeam == CsTeam.CounterTerrorist) {
-                Server.ExecuteCommand("mp_warmup_end");
-
-                Server.PrintToChatAll($"{MessagePrefix} {Localizer["mr.retakes.events.WarmupEnd"]}");
-                theGameManager.scrambleTeams();
-            }
-            return HookResult.Continue;
-        }
+        List<CCSPlayerController> myQueuePlayers = theQueueManager.getQueuePlayers();
 
         if (!aPlayer.isPlayerValid()) {
             return HookResult.Handled;
         }
 
+        if (checkIfGameCanStart(myNewTeam)) {
+            return HookResult.Continue;
+        }
+
         if (myNewTeam == CsTeam.Spectator) {
             if (theQueueManager.isPlayerActive(aPlayer)) {
                 theQueueManager.removePlayerFromQueues(aPlayer);
+                aPlayer.setTeam(myNewTeam);
                 aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.JoinSpectator"]}");
             }
             return HookResult.Continue;
         }
 
-        if (!theQueueManager.getQueuePlayers().Contains(aPlayer) && !theQueueManager.getActivePlayers().Contains(aPlayer)) {
+        if (!myQueuePlayers.Contains(aPlayer) && !myQueuePlayers.Contains(aPlayer)) {
             if (myNewTeam == CsTeam.Terrorist || myNewTeam == CsTeam.CounterTerrorist) {
                 theQueueManager.addPlayerToQueuePlayers(aPlayer);
                 aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.Joined"]}");
-            }
-            return HookResult.Handled;
-        }
-
-        if (theQueueManager.getQueuePlayers().Contains(aPlayer)) {
-            if (myNewTeam == CsTeam.Terrorist || myNewTeam == CsTeam.CounterTerrorist) {
-                aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.AlreadyInQueue"]}");
+                checkIfGameCanStart(myNewTeam);
                 return HookResult.Handled;
             }
+            return HookResult.Continue;
+        }
 
+        if (myQueuePlayers.Contains(aPlayer)) {
+            if (myNewTeam == CsTeam.Terrorist || myNewTeam == CsTeam.CounterTerrorist) {
+                aPlayer.PrintToChat($"{MakisRetake.MessagePrefix} {MakisRetake.Plugin.Localizer["mr.retakes.queue.AlreadyInQueue"]}");
+                return HookResult.Continue;
+            }
+
+            aPlayer.setTeam(myNewTeam);
             theQueueManager.removePlayerFromQueues(aPlayer);
             return HookResult.Continue;
         }
 
         return HookResult.Continue;
+    }
+
+    private bool checkIfGameCanStart(CsTeam aTeam) {
+        if (Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.WarmupPeriod &&
+            theQueueManager.getQueuePlayers().Where(aPlayer => aPlayer.isPlayerConnected()).Count() >= 2) {
+            if (aTeam == CsTeam.Terrorist || aTeam == CsTeam.CounterTerrorist) {
+                Server.ExecuteCommand("mp_warmup_end");
+
+                Server.PrintToChatAll($"{MessagePrefix} {Localizer["mr.retakes.events.WarmupEnd"]}");
+                theGameManager.scrambleTeams();
+            }
+            return true;
+        }
+        return false;
     }
 
     [GameEventHandler(HookMode.Pre)]

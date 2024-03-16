@@ -33,11 +33,11 @@ public class QueueManager {
     }
 
     public List<CCSPlayerController> getQueuePlayers() {
-        return theQueuePlayers;
+        return theQueuePlayers.ToList();
     }
 
     public List<CCSPlayerController> getActivePlayers() {
-        return theActivePlayers;
+        return theActivePlayers.ToList();
     }
 
     public void removePlayerFromQueues(CCSPlayerController aPlayer) {

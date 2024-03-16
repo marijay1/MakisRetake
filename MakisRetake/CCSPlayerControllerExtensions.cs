@@ -19,6 +19,6 @@ public static class CCSPlayerControllerExtensions {
 
     public static void setTeam(this CCSPlayerController aPlayer, CsTeam aTeam) {
         aPlayer.SwitchTeam(aTeam);
-        aPlayer.TeamNum = (byte)aTeam;
+        //aPlayer.TeamNum = (byte)aTeam;
     }
 }
